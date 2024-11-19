@@ -1,3 +1,4 @@
+use bevy::app::AppExit;
 use bevy::text::{Text, TextStyle};
 use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy::{
@@ -10,6 +11,7 @@ use bevy::{
         },
     },
 };
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use std::f32::consts::PI;
 
@@ -27,14 +29,21 @@ struct DistanceTracker {
 
 const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
 const SIGN_SPACING_DISTANCE: f32 = 15.;
+const NUMBER_OF_SIGNS: u32 = 4;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, setup)
         .add_systems(
             Update,
-            (move_player, move_distance_marker, sign_spawn_manager),
+            (
+                move_player,
+                move_distance_marker,
+                sign_spawn_manager,
+                close_on_esc,
+            ),
         )
         .run();
 }
@@ -52,8 +61,8 @@ fn setup(
 
     let plane_mesh = meshes.add(Plane3d::default().mesh().size(2.0, 2.0));
 
-    for x in -3..200 {
-        for z in -3..4 {
+    for x in -3..600 {
+        for z in -2..3 {
             commands.spawn((PbrBundle {
                 mesh: plane_mesh.clone(),
                 material: if (x + z) % 2 == 0 {
@@ -82,6 +91,100 @@ fn setup(
     ));
 
     // light
+
+    //sun
+    commands.spawn((
+        DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
+                illuminance: 6_000.,
+                shadows_enabled: true,
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(0.0, 5.0, 0.0),
+                rotation: Quat::from_rotation_x(-PI / 4.),
+                ..default()
+            },
+            // The default cascade config is designed to handle large scenes.
+            // As this example has a much smaller world, we can tighten the shadow
+            // bounds for better visual quality.
+            cascade_shadow_config: CascadeShadowConfigBuilder {
+                first_cascade_far_bound: 4.0,
+                maximum_distance: 10.0,
+                ..default()
+            }
+            .into(),
+            ..default()
+        },
+        Name::new("sun"),
+    ));
+    commands.spawn((
+        DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
+                illuminance: 2_000.,
+                shadows_enabled: true,
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(0.0, 5.0, 0.0),
+                rotation: Quat::from_rotation_x(PI / 4.),
+                ..default()
+            },
+            // The default cascade config is designed to handle large scenes.
+            // As this example has a much smaller world, we can tighten the shadow
+            // bounds for better visual quality.
+            cascade_shadow_config: CascadeShadowConfigBuilder {
+                first_cascade_far_bound: 4.0,
+                maximum_distance: 10.0,
+                ..default()
+            }
+            .into(),
+            ..default()
+        },
+        Name::new("fill"),
+    ));
+
+    // commands.spawn((
+    //     PointLightBundle {
+    //         point_light: PointLight {
+    //             intensity: 2_000_000.0,
+    //             shadows_enabled: true,
+    //             ..default()
+    //         },
+    //         transform: Transform::from_xyz(4.0, 8.0, 4.0),
+    //         ..default()
+    //     },
+    //     Person,
+    // ));
+    //
+    // commands.spawn((
+    //     PointLightBundle {
+    //         point_light: PointLight {
+    //             intensity: 2_000_000.0,
+    //             shadows_enabled: true,
+    //             ..default()
+    //         },
+    //         transform: Transform::from_xyz(20.0, 8.0, 4.0),
+    //         ..default()
+    //     },
+    //     Person,
+    // ));
+    //
+    // commands.spawn((
+    //     PointLightBundle {
+    //         point_light: PointLight {
+    //             intensity: 1_100_000_000.0,
+    //             shadows_enabled: true,
+    //             ..default()
+    //         },
+    //         transform: Transform::from_xyz(20.0, 20.0, 4.0),
+    //         ..default()
+    //     },
+    //     Person,
+    // ));
+    //
     commands.spawn((
         PointLightBundle {
             point_light: PointLight {
@@ -89,33 +192,7 @@ fn setup(
                 shadows_enabled: true,
                 ..default()
             },
-            transform: Transform::from_xyz(4.0, 8.0, 4.0),
-            ..default()
-        },
-        Person,
-    ));
-
-    commands.spawn((
-        PointLightBundle {
-            point_light: PointLight {
-                intensity: 2_000_000.0,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform::from_xyz(20.0, 8.0, 4.0),
-            ..default()
-        },
-        Person,
-    ));
-
-    commands.spawn((
-        PointLightBundle {
-            point_light: PointLight {
-                intensity: 1_100_000_000.0,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform::from_xyz(20.0, 20.0, 4.0),
+            transform: Transform::from_xyz(-10.0, 5., 0.0),
             ..default()
         },
         Person,
@@ -124,7 +201,7 @@ fn setup(
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(-9.5, 3.5, 0.5).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(-9.5, 3.5, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
             // transform: Transform::from_xyz(-9.5, 4.5, 0.5).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
@@ -138,7 +215,7 @@ fn setup(
             &mut meshes,
             &mut materials,
             &mut images,
-            15. + i as f32 * SIGN_SPACING_DISTANCE,
+            25. + i as f32 * SIGN_SPACING_DISTANCE,
         );
     }
 }
@@ -171,26 +248,22 @@ fn sign_spawn_manager(
     let mut last_sign = signs_query.iter().last().unwrap();
     let mut first_sign = signs_query.iter().last().unwrap();
 
-    for sign in &signs_query {
-        if sign.1.translation.x < last_sign.1.translation.x {
-            last_sign = sign;
-        }
-        if sign.1.translation.x > first_sign.1.translation.x {
-            first_sign = sign;
+    // remove old signs
+    let mut removed_sign = false;
+    for (entity, sign) in &signs_query {
+        if distance_traveled - sign.translation.x > 10. {
+            commands.entity(entity).despawn();
+            removed_sign = true;
         }
     }
-    println!(
-        "distance traveled: {}",
-        distance_traveled - last_sign.1.translation.x
-    );
-    if (distance_traveled - last_sign.1.translation.x) > 10. {
-        commands.entity(last_sign.0).despawn();
+
+    if removed_sign {
         spawn_signs(
             &mut commands,
             &mut meshes,
             &mut materials,
             &mut images,
-            first_sign.1.translation.x + SIGN_SPACING_DISTANCE,
+            distance_traveled + SIGN_SPACING_DISTANCE * NUMBER_OF_SIGNS as f32,
         );
     }
 }
@@ -266,9 +339,9 @@ fn spawn_signs(
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
-                "This is a cube",
+                "Japanesse",
                 TextStyle {
-                    font_size: 40.0,
+                    font_size: 80.0,
                     color: Color::BLACK,
                     ..default()
                 },
@@ -288,10 +361,12 @@ fn spawn_signs(
     let sign_left = commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Cuboid::new(1.0, 4.0, 8.0)),
+                mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
                 // material: materials.add(Color::srgb_u8(124, 144, 255)),
-                material: material_handle,
-                transform: Transform::from_xyz(distance, 1.5, -SIGN_SPACING),
+                material: material_handle.clone(),
+                transform: Transform::from_xyz(distance, 1.5, -SIGN_SPACING).with_rotation(
+                    Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.),
+                ),
                 ..default()
             },
             Sign,
@@ -306,6 +381,31 @@ fn spawn_signs(
                 },
             ));
         });
+
+    let sign_left = commands
+        .spawn((
+            PbrBundle {
+                mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
+                // material: materials.add(Color::srgb_u8(124, 144, 255)),
+                material: material_handle,
+                transform: Transform::from_xyz(distance, 1.5, SIGN_SPACING).with_rotation(
+                    Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.),
+                ),
+                ..default()
+            },
+            Sign,
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                "This is a cube",
+                TextStyle {
+                    font_size: 40.0,
+                    color: Color::BLACK,
+                    ..default()
+                },
+            ));
+        });
+
     // let sign_right = commands
     //     .spawn((
     //         PbrBundle {
@@ -317,4 +417,20 @@ fn spawn_signs(
     //         Sign,
     //     ))
     //     .id();
+}
+
+pub fn close_on_esc(
+    mut commands: Commands,
+    focused_windows: Query<(Entity, &Window)>,
+    input: Res<ButtonInput<KeyCode>>,
+) {
+    for (window, focus) in focused_windows.iter() {
+        if !focus.focused {
+            continue;
+        }
+
+        if input.just_pressed(KeyCode::Escape) {
+            commands.entity(window).despawn();
+        }
+    }
 }
