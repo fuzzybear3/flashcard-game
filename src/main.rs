@@ -12,8 +12,11 @@ use bevy::{
     },
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use std::{f32::consts::PI, path::Path};
 
-use std::f32::consts::PI;
+use serde::Deserialize;
+use std::fs;
+use toml;
 
 #[derive(Component)]
 struct Person;
@@ -30,6 +33,30 @@ struct DistanceTracker {
 const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
 const SIGN_SPACING_DISTANCE: f32 = 15.;
 const NUMBER_OF_SIGNS: u32 = 4;
+
+#[derive(Debug, Deserialize)]
+enum Category {
+    Adjective,
+    Noun,
+    Expression,
+    Verb,
+    Time,
+    Question,
+    Response,
+}
+
+#[derive(Debug, Deserialize)]
+struct Translation {
+    japanese_word: String,
+    english_translation: String,
+    category: Category,
+    romaji: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct Vocabulary {
+    translations: Vec<Translation>,
+}
 
 fn main() {
     App::new()
@@ -55,7 +82,9 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    // Chessboard Plane
+    let vocabulary = read_translation_file("translations.toml");
+
+    // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
     let white_material = materials.add(Color::WHITE);
 
@@ -433,4 +462,12 @@ pub fn close_on_esc(
             commands.entity(window).despawn();
         }
     }
+}
+
+fn read_translation_file(file_name: &str) -> Vocabulary {
+    // Read the TOML file
+    let content = fs::read_to_string(file_name).expect("could not read translation file");
+
+    // Parse the TOML content
+    toml::from_str(&content).expect("could not parse vocab file")
 }
