@@ -18,6 +18,9 @@ use serde::Deserialize;
 use std::fs;
 use toml;
 
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+
 #[derive(Component)]
 struct Person;
 
@@ -53,9 +56,21 @@ struct Translation {
     romaji: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Resource)]
 struct Vocabulary {
     translations: Vec<Translation>,
+}
+
+impl Vocabulary {
+    fn ramdom_translation(&self) -> &Translation {
+        // Create a random number generator
+        let mut rng = thread_rng();
+
+        // Choose a random element from the vector
+        self.translations
+            .choose(&mut rng)
+            .expect("Vocabulary vec is empty")
+    }
 }
 
 fn main() {
@@ -244,9 +259,13 @@ fn setup(
             &mut meshes,
             &mut materials,
             &mut images,
+            vocabulary.ramdom_translation(),
+            vocabulary.ramdom_translation(),
             25. + i as f32 * SIGN_SPACING_DISTANCE,
         );
     }
+
+    commands.insert_resource(vocabulary);
 }
 
 fn move_player(mut query: Query<&mut Transform, With<Person>>) {
@@ -272,6 +291,7 @@ fn sign_spawn_manager(
     mut images: ResMut<Assets<Image>>,
     query: Query<&DistanceTracker>,
     signs_query: Query<(Entity, &Transform), With<Sign>>,
+    vocabulary: Res<Vocabulary>,
 ) {
     let distance_traveled = query.single().distance_traveled;
     let mut last_sign = signs_query.iter().last().unwrap();
@@ -292,6 +312,8 @@ fn sign_spawn_manager(
             &mut meshes,
             &mut materials,
             &mut images,
+            vocabulary.ramdom_translation(),
+            vocabulary.ramdom_translation(),
             distance_traveled + SIGN_SPACING_DISTANCE * NUMBER_OF_SIGNS as f32,
         );
     }
@@ -302,6 +324,8 @@ fn spawn_signs(
     mut meshes: &mut ResMut<Assets<Mesh>>,
     mut materials: &mut ResMut<Assets<StandardMaterial>>,
     mut images: &mut ResMut<Assets<Image>>,
+    translation: &Translation,
+    other_translation: &Translation,
     distance: f32,
 ) {
     const SIGN_SPACING: f32 = 6.;
@@ -312,74 +336,95 @@ fn spawn_signs(
         ..default()
     };
 
-    // This is the texture that will be rendered to.
-    let mut image = Image {
-        texture_descriptor: TextureDescriptor {
-            label: None,
-            size,
-            dimension: TextureDimension::D2,
-            format: TextureFormat::Bgra8UnormSrgb,
-            mip_level_count: 1,
-            sample_count: 1,
-            usage: TextureUsages::TEXTURE_BINDING
-                | TextureUsages::COPY_DST
-                | TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        },
-        ..default()
-    };
+    fn create_sign_texture(
+        commands: &mut Commands,
+        images: &mut ResMut<Assets<Image>>,
+        text_content: &str,
+    ) -> Handle<Image> {
+        let size = Extent3d {
+            width: 512,
+            height: 512,
+            ..default()
+        };
 
-    // fill image.data with zeroes
-    image.resize(size);
-
-    let image_handle = images.add(image);
-
-    // Light
-    commands.spawn(DirectionalLightBundle::default());
-
-    let texture_camera = commands
-        .spawn(Camera2dBundle {
-            camera: Camera {
-                // render before the "main pass" camera
-                order: -1,
-                target: RenderTarget::Image(image_handle.clone()),
-                ..default()
+        let mut image = Image {
+            texture_descriptor: TextureDescriptor {
+                label: None,
+                size,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::Bgra8UnormSrgb,
+                mip_level_count: 1,
+                sample_count: 1,
+                usage: TextureUsages::TEXTURE_BINDING
+                    | TextureUsages::COPY_DST
+                    | TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[],
             },
             ..default()
-        })
-        .id();
+        };
 
-    commands
-        .spawn((
-            NodeBundle {
-                style: Style {
-                    // Cover the whole image
-                    width: Val::Percent(100.),
-                    height: Val::Percent(100.),
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
+        // Fill image data with zeroes
+        image.resize(size);
+
+        let image_handle = images.add(image);
+
+        // Create a unique camera for rendering each texture with different text
+        let texture_camera = commands
+            .spawn(Camera2dBundle {
+                camera: Camera {
+                    order: -1,
+                    target: RenderTarget::Image(image_handle.clone()),
                     ..default()
                 },
-                background_color: GOLD.into(),
                 ..default()
-            },
-            TargetCamera(texture_camera),
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "Japanesse",
-                TextStyle {
-                    font_size: 80.0,
-                    color: Color::BLACK,
+            })
+            .id();
+
+        // Set up the UI text for the texture
+        commands
+            .spawn((
+                NodeBundle {
+                    style: Style {
+                        width: Val::Percent(100.),
+                        height: Val::Percent(100.),
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    background_color: GOLD.into(),
                     ..default()
                 },
-            ));
-        });
+                TargetCamera(texture_camera),
+            ))
+            .with_children(|parent| {
+                parent.spawn(TextBundle::from_section(
+                    text_content,
+                    TextStyle {
+                        font_size: 80.0,
+                        color: Color::BLACK,
+                        ..default()
+                    },
+                ));
+            });
 
+        image_handle
+    }
+
+    let left_image_handle = create_sign_texture(commands, images, translation.romaji.as_str());
+    let right_image_handle =
+        create_sign_texture(commands, images, other_translation.romaji.as_str());
     // This material has the texture that has been rendered.
-    let material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(image_handle),
+    let left_material_handle = materials.add(StandardMaterial {
+        base_color_texture: Some(left_image_handle),
+        reflectance: 0.02,
+        unlit: false,
+
+        ..default()
+    });
+
+    let right_material_handle = materials.add(StandardMaterial {
+        base_color_texture: Some(right_image_handle),
         reflectance: 0.02,
         unlit: false,
 
@@ -392,7 +437,7 @@ fn spawn_signs(
             PbrBundle {
                 mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
                 // material: materials.add(Color::srgb_u8(124, 144, 255)),
-                material: material_handle.clone(),
+                material: left_material_handle,
                 transform: Transform::from_xyz(distance, 1.5, -SIGN_SPACING).with_rotation(
                     Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.),
                 ),
@@ -411,12 +456,12 @@ fn spawn_signs(
             ));
         });
 
-    let sign_left = commands
+    let sign_right = commands
         .spawn((
             PbrBundle {
                 mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
                 // material: materials.add(Color::srgb_u8(124, 144, 255)),
-                material: material_handle,
+                material: right_material_handle,
                 transform: Transform::from_xyz(distance, 1.5, SIGN_SPACING).with_rotation(
                     Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.),
                 ),
@@ -434,18 +479,6 @@ fn spawn_signs(
                 },
             ));
         });
-
-    // let sign_right = commands
-    //     .spawn((
-    //         PbrBundle {
-    //             mesh: meshes.add(Cuboid::new(1.0, 4.0, 8.0)),
-    //             material: materials.add(Color::srgb_u8(124, 144, 255)),
-    //             transform: Transform::from_xyz(distance, 1.5, SIGN_SPACING),
-    //             ..default()
-    //         },
-    //         Sign,
-    //     ))
-    //     .id();
 }
 
 pub fn close_on_esc(
