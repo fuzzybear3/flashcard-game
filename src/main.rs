@@ -1,9 +1,8 @@
-use bevy::app::AppExit;
-use bevy::text::{Text, TextStyle};
+// use bevy::app::AppExit;
+// use bevy::text::TextStyle;
 use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy::{
     // color::palettes::css::GOLD,
-    prelude::*,
     render::{
         camera::RenderTarget,
         render_resource::{
@@ -12,11 +11,10 @@ use bevy::{
     },
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use std::{f32::consts::PI, path::Path};
+use std::f32::consts::PI;
 
 use serde::Deserialize;
 use std::fs;
-use toml;
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -30,7 +28,7 @@ struct Sign;
 #[derive(Component)]
 struct DistanceTracker {
     distance_traveled: f32,
-    distance_from_last_sign: f32,
+    _distance_from_last_sign: f32,
 }
 
 const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
@@ -48,6 +46,7 @@ enum Category {
     Response,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct Translation {
     japanese_word: String,
@@ -130,7 +129,7 @@ fn setup(
         Person,
         DistanceTracker {
             distance_traveled: 0.,
-            distance_from_last_sign: 0.,
+            _distance_from_last_sign: 0.,
         },
     ));
 
@@ -294,8 +293,6 @@ fn sign_spawn_manager(
     vocabulary: Res<Vocabulary>,
 ) {
     let distance_traveled = query.single().distance_traveled;
-    let mut last_sign = signs_query.iter().last().unwrap();
-    let mut first_sign = signs_query.iter().last().unwrap();
 
     // remove old signs
     let mut removed_sign = false;
@@ -320,21 +317,21 @@ fn sign_spawn_manager(
 }
 
 fn spawn_signs(
-    mut commands: &mut Commands,
-    mut meshes: &mut ResMut<Assets<Mesh>>,
-    mut materials: &mut ResMut<Assets<StandardMaterial>>,
-    mut images: &mut ResMut<Assets<Image>>,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
     translation: &Translation,
     other_translation: &Translation,
     distance: f32,
 ) {
     const SIGN_SPACING: f32 = 6.;
 
-    let size = Extent3d {
-        width: 512,
-        height: 512,
-        ..default()
-    };
+    // let size = Extent3d {
+    //     width: 512,
+    //     height: 512,
+    //     ..default()
+    // };
 
     fn create_sign_texture(
         commands: &mut Commands,
@@ -432,7 +429,8 @@ fn spawn_signs(
     });
 
     // Spawn a cube mesh that is scaled to be flat along one axis
-    let sign_left = commands
+    // Left sign
+    commands
         .spawn((
             PbrBundle {
                 mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
@@ -456,7 +454,8 @@ fn spawn_signs(
             ));
         });
 
-    let sign_right = commands
+    // Right sign
+    commands
         .spawn((
             PbrBundle {
                 mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
