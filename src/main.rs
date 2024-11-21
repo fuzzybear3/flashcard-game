@@ -2,6 +2,10 @@
 // use bevy::text::TextStyle;
 use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy::{
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
+    render::render_resource::Texture,
+};
+use bevy::{
     // color::palettes::css::GOLD,
     render::{
         camera::RenderTarget,
@@ -12,6 +16,7 @@ use bevy::{
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use std::f32::consts::PI;
+// prelude::*,
 
 use serde::Deserialize;
 use std::fs;
@@ -23,7 +28,9 @@ use rand::thread_rng;
 struct Person;
 
 #[derive(Component)]
-struct Sign;
+struct Sign {
+    image_handle: Handle<Image>,
+}
 
 #[derive(Component)]
 struct DistanceTracker {
@@ -76,6 +83,18 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(FpsOverlayPlugin {
+            config: FpsOverlayConfig {
+                text_config: TextStyle {
+                    // Here we define size of our overlay
+                    font_size: 50.0,
+                    // We can also change color of the overlay
+                    color: Color::srgb(0.0, 1.0, 0.0),
+                    // If we want, we can use a custom font
+                    font: default(),
+                },
+            },
+        })
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -84,6 +103,7 @@ fn main() {
                 move_distance_marker,
                 sign_spawn_manager,
                 close_on_esc,
+                resource_debug_system,
             ),
         )
         .run();
@@ -244,7 +264,7 @@ fn setup(
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(-9.5, 3.5, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(-9.5, 2., 0.0).looking_at(Vec3::ZERO, Vec3::Y),
             // transform: Transform::from_xyz(-9.5, 4.5, 0.5).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
@@ -289,16 +309,19 @@ fn sign_spawn_manager(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
     query: Query<&DistanceTracker>,
-    signs_query: Query<(Entity, &Transform), With<Sign>>,
+    signs_query: Query<(Entity, &Transform, &Sign)>,
     vocabulary: Res<Vocabulary>,
 ) {
     let distance_traveled = query.single().distance_traveled;
 
     // remove old signs
     let mut removed_sign = false;
-    for (entity, sign) in &signs_query {
-        if distance_traveled - sign.translation.x > 10. {
-            commands.entity(entity).despawn();
+    for (entity, transform, sign) in &signs_query {
+        if distance_traveled - transform.translation.x > 10. {
+            // commands.entity(entity).clear();
+
+            images.remove(sign.image_handle.id());
+            commands.entity(entity).despawn_recursive();
             removed_sign = true;
         }
     }
@@ -325,18 +348,13 @@ fn spawn_signs(
     other_translation: &Translation,
     distance: f32,
 ) {
-    const SIGN_SPACING: f32 = 6.;
-
-    // let size = Extent3d {
-    //     width: 512,
-    //     height: 512,
-    //     ..default()
-    // };
+    const SIGN_DISTANCE_FROM_CENTER: f32 = 6.;
 
     fn create_sign_texture(
         commands: &mut Commands,
         images: &mut ResMut<Assets<Image>>,
         text_content: &str,
+        parent_entity: Entity,
     ) -> Handle<Image> {
         let size = Extent3d {
             width: 512,
@@ -376,7 +394,9 @@ fn spawn_signs(
                 ..default()
             })
             .id();
-
+        commands
+            .entity(parent_entity)
+            .push_children(&[texture_camera]);
         // Set up the UI text for the texture
         commands
             .spawn((
@@ -408,76 +428,91 @@ fn spawn_signs(
         image_handle
     }
 
-    let left_image_handle = create_sign_texture(commands, images, translation.romaji.as_str());
-    let right_image_handle =
-        create_sign_texture(commands, images, other_translation.romaji.as_str());
+    let left_sign_entity = commands.spawn(SpatialBundle { ..default() }).id();
+    let left_image_handle = create_sign_texture(
+        commands,
+        images,
+        translation.romaji.as_str(),
+        left_sign_entity,
+    );
+    // let right_image_handle =
+    //     create_sign_texture(commands, images, other_translation.romaji.as_str());
+    //
+    // let middle_image_handle =
+    //     create_sign_texture(commands, images, translation.english_translation.as_str());
+
     // This material has the texture that has been rendered.
     let left_material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(left_image_handle),
+        base_color_texture: Some(left_image_handle.clone()),
         reflectance: 0.02,
         unlit: false,
-
         ..default()
     });
 
-    let right_material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(right_image_handle),
-        reflectance: 0.02,
-        unlit: false,
-
-        ..default()
-    });
+    // let right_material_handle = materials.add(StandardMaterial {
+    //     base_color_texture: Some(right_image_handle),
+    //     reflectance: 0.02,
+    //     unlit: false,
+    //
+    //     ..default()
+    // });
+    //
+    // let middle_material_handle = materials.add(StandardMaterial {
+    //     base_color_texture: Some(middle_image_handle),
+    //     reflectance: 0.02,
+    //     unlit: false,
+    //
+    //     ..default()
+    // });
 
     // Spawn a cube mesh that is scaled to be flat along one axis
     // Left sign
-    commands
+    let left_sign_mesh = commands
         .spawn((
             PbrBundle {
                 mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
                 // material: materials.add(Color::srgb_u8(124, 144, 255)),
                 material: left_material_handle,
-                transform: Transform::from_xyz(distance, 1.5, -SIGN_SPACING).with_rotation(
-                    Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.),
-                ),
+                transform: Transform::from_xyz(distance, 1.5, -SIGN_DISTANCE_FROM_CENTER)
+                    .with_rotation(
+                        Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.),
+                    ),
                 ..default()
             },
-            Sign,
+            Sign {
+                image_handle: left_image_handle,
+            },
         ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "This is a cube",
-                TextStyle {
-                    font_size: 40.0,
-                    color: Color::BLACK,
-                    ..default()
-                },
-            ));
-        });
+        .id();
 
-    // Right sign
     commands
-        .spawn((
-            PbrBundle {
-                mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
-                // material: materials.add(Color::srgb_u8(124, 144, 255)),
-                material: right_material_handle,
-                transform: Transform::from_xyz(distance, 1.5, SIGN_SPACING).with_rotation(
-                    Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.),
-                ),
-                ..default()
-            },
-            Sign,
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "This is a cube",
-                TextStyle {
-                    font_size: 40.0,
-                    color: Color::BLACK,
-                    ..default()
-                },
-            ));
-        });
+        .entity(left_sign_entity)
+        .push_children(&[left_sign_mesh]);
+    // Right sign
+    // commands.spawn((
+    //     PbrBundle {
+    //         mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
+    //         // material: materials.add(Color::srgb_u8(124, 144, 255)),
+    //         material: right_material_handle,
+    //         transform: Transform::from_xyz(distance, 1.5, SIGN_DISTANCE_FROM_CENTER)
+    //             .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.)),
+    //         ..default()
+    //     },
+    //     Sign,
+    // ));
+    //
+    // // middle sign
+    // commands.spawn((
+    //     PbrBundle {
+    //         mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
+    //         // material: materials.add(Color::srgb_u8(124, 144, 255)),
+    //         material: middle_material_handle,
+    //         transform: Transform::from_xyz(distance, 4.5, 0.0)
+    //             .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_y(-PI / 16.)),
+    //         ..default()
+    //     },
+    //     Sign,
+    // ));
 }
 
 pub fn close_on_esc(
@@ -491,7 +526,7 @@ pub fn close_on_esc(
         }
 
         if input.just_pressed(KeyCode::Escape) {
-            commands.entity(window).despawn();
+            commands.entity(window).despawn_recursive();
         }
     }
 }
@@ -502,4 +537,39 @@ fn read_translation_file(file_name: &str) -> Vocabulary {
 
     // Parse the TOML content
     toml::from_str(&content).expect("could not parse vocab file")
+}
+
+fn resource_debug_system(
+    // Count of entities in the game world
+    entities: Query<Entity>,
+    // Access to different asset types to check for leaks
+    // textures: Res<Assets<Texture>>,
+    images: Res<Assets<Image>>,
+    meshes: Res<Assets<Mesh>>,
+    cameras: Query<Entity, With<Camera>>,
+    time: Res<Time>,
+    mut timer: Local<Timer>,
+) {
+    // Initialize the timer on first run
+    if timer.finished() {
+        timer.set_duration(std::time::Duration::from_secs(3));
+        timer.reset();
+    }
+    // Set up a timer to print this information every 3 seconds
+    if timer.tick(time.delta()).finished() {
+        let num_entities = entities.iter().count();
+        // let num_textures = textures.len();
+        let num_images = images.len();
+        let num_meshes = meshes.len();
+        let num_cameras = cameras.iter().count();
+
+        // Print debug information
+        println!("=== Debug Information ===");
+        println!("Total entities: {}", num_entities);
+        // println!("Number of Textures: {}", num_textures);
+        println!("Number of Images: {}", num_images);
+        println!("Number of Meshes: {}", num_meshes);
+        println!("Number of Cameras: {}", num_cameras);
+        println!("=========================");
+    }
 }
