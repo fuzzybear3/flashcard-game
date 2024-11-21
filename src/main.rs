@@ -1,22 +1,14 @@
-// use bevy::app::AppExit;
-// use bevy::text::TextStyle;
-use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
-use bevy::{
-    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
-    render::render_resource::Texture,
-};
-use bevy::{
-    // color::palettes::css::GOLD,
-    render::{
-        camera::RenderTarget,
-        render_resource::{
-            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-        },
+use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
+use bevy::render::{
+    camera::RenderTarget,
+    render_resource::{
+        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
     },
 };
+use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
+#[allow(unused_imports)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use std::f32::consts::PI;
-// prelude::*,
 
 use serde::Deserialize;
 use std::fs;
@@ -83,7 +75,7 @@ impl Vocabulary {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(WorldInspectorPlugin::new())
+        // .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
                 text_config: TextStyle {
@@ -104,9 +96,7 @@ fn main() {
                 move_distance_marker,
                 sign_spawn_manager,
                 close_on_esc,
-                resource_debug_system,
-                // print_parent_child_pairs,
-                // print_parent_child_pairs_with_components,
+                // resource_debug_system,
             ),
         )
         .run();
@@ -321,7 +311,7 @@ fn sign_spawn_manager(
     let mut removed_sign = false;
     for (entity, transform, sign) in &signs_query {
         if distance_traveled - transform.translation.x > 10. {
-            // commands.entity(entity).clear()            images.remove(sign.image_handle.id());
+            images.remove(sign.image_handle.id());
             commands.entity(entity).despawn_recursive();
             commands.entity(sign.ui_id).despawn_recursive();
             removed_sign = true;
@@ -338,7 +328,6 @@ fn sign_spawn_manager(
             vocabulary.ramdom_translation(),
             distance_traveled + SIGN_SPACING_DISTANCE * NUMBER_OF_SIGNS as f32,
         );
-        println!("spawn signs");
     }
 }
 
@@ -463,10 +452,37 @@ fn spawn_signs(
 ) {
     const SIGN_DISTANCE_FROM_CENTER: f32 = 6.;
 
+    // Left sign
     let transform = Transform::from_xyz(distance, 1.5, -SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.));
 
-    let sign = create_sign(
+    create_sign(
+        commands,
+        materials,
+        images,
+        translation.romaji.as_str(),
+        transform,
+        meshes,
+    );
+
+    // Middle sign
+    let transform = Transform::from_xyz(distance, 4.5, 0.0)
+        .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_y(-PI / 16.));
+
+    create_sign(
+        commands,
+        materials,
+        images,
+        translation.english_translation.as_str(),
+        transform,
+        meshes,
+    );
+
+    // Right sign
+    let transform = Transform::from_xyz(distance, 1.5, SIGN_DISTANCE_FROM_CENTER)
+        .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
+
+    create_sign(
         commands,
         materials,
         images,
@@ -474,94 +490,6 @@ fn spawn_signs(
         transform,
         meshes,
     );
-
-    // let left_sign_entity = commands
-    //     .spawn((SpatialBundle { ..default() }, Name::new("left_sign")))
-    //     .id();
-
-    // let left_image_handle = create_sign_texture(
-    //     commands,
-    //     images,
-    //     translation.romaji.as_str(),
-    //     left_sign_entity,
-    // );
-    //
-    // let middle_image_handle =
-    //     create_sign_texture(commands, images, translation.english_translation.as_str());
-
-    // This material has the texture that has been rendered.
-    // let left_material_handle = materials.add(StandardMaterial {
-    //     base_color_texture: Some(left_image_handle.clone()),
-    //     reflectance: 0.02,
-    //     unlit: false,
-    //     ..default()
-    // });
-
-    // let right_material_handle = materials.add(StandardMaterial {
-    //     base_color_texture: Some(right_image_handle),
-    //     reflectance: 0.02,
-    //     unlit: false,
-    //
-    //     ..default()
-    // });
-    //
-    // let middle_material_handle = materials.add(StandardMaterial {
-    //     base_color_texture: Some(middle_image_handle),
-    //     reflectance: 0.02,
-    //     unlit: false,
-    //
-    //     ..default()
-    // });
-
-    // Spawn a cube mesh that is scaled to be flat along one axis
-    // Left sign
-    // let left_sign_mesh = commands
-    //     .spawn((
-    //         PbrBundle {
-    //             mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
-    //             // material: materials.add(Color::srgb_u8(124, 144, 255)),
-    //             material: left_material_handle,
-    //             transform: Transform::from_xyz(distance, 1.5, -SIGN_DISTANCE_FROM_CENTER)
-    //                 .with_rotation(
-    //                     Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.),
-    //                 ),
-    //             ..default()
-    //         },
-    //         Sign {
-    //             image_handle: left_image_handle.clone(),
-    //         },
-    //     ))
-    //     .id();
-    //
-    // commands.entity(left_sign_entity).add_child(left_sign_mesh);
-    // commands.entity(left_sign_entity).insert(Sign {
-    //     image_handle: left_image_handle,
-    // });
-    // Right sign
-    // commands.spawn((
-    //     PbrBundle {
-    //         mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
-    //         // material: materials.add(Color::srgb_u8(124, 144, 255)),
-    //         material: right_material_handle,
-    //         transform: Transform::from_xyz(distance, 1.5, SIGN_DISTANCE_FROM_CENTER)
-    //             .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.)),
-    //         ..default()
-    //     },
-    //     Sign,
-    // ));
-    //
-    // // middle sign
-    // commands.spawn((
-    //     PbrBundle {
-    //         mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
-    //         // material: materials.add(Color::srgb_u8(124, 144, 255)),
-    //         material: middle_material_handle,
-    //         transform: Transform::from_xyz(distance, 4.5, 0.0)
-    //             .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_y(-PI / 16.)),
-    //         ..default()
-    //     },
-    //     Sign,
-    // ));
 }
 
 pub fn close_on_esc(
@@ -588,11 +516,9 @@ fn read_translation_file(file_name: &str) -> Vocabulary {
     toml::from_str(&content).expect("could not parse vocab file")
 }
 
+#[allow(dead_code)]
 fn resource_debug_system(
-    // Count of entities in the game world
     entities: Query<Entity>,
-    // Access to different asset types to check for leaks
-    // textures: Res<Assets<Texture>>,
     images: Res<Assets<Image>>,
     meshes: Res<Assets<Mesh>>,
     cameras: Query<Entity, With<Camera>>,
@@ -620,86 +546,5 @@ fn resource_debug_system(
         println!("Number of Meshes: {}", num_meshes);
         println!("Number of Cameras: {}", num_cameras);
         println!("=========================");
-    }
-}
-
-fn print_parent_child_pairs(
-    parent_query: Query<(Entity, &Children)>,
-    child_query: Query<(Entity, &Parent)>,
-    time: Res<Time>,
-    mut timer: Local<Timer>,
-) {
-    // Initialize the timer on first run
-    if timer.finished() {
-        timer.set_duration(std::time::Duration::from_secs(3));
-        timer.reset();
-    }
-    // Set up a timer to print this information every 3 seconds
-    if timer.tick(time.delta()).finished() {
-        // Print all parent -> child relationships
-        for (parent, children) in parent_query.iter() {
-            for &child in children.iter() {
-                println!("Parent: {:?} -> Child: {:?}", parent, child);
-            }
-        }
-
-        // // Print all child -> parent relationships
-        // for (child, parent) in child_query.iter() {
-        //     println!("Child: {:?} -> Parent: {:?}", child, parent.get());
-        // }
-        println!("-----------------------------------------------------");
-    }
-}
-
-// Define a custom trait for easier component printing
-trait DebuggableComponent {
-    fn as_debug_string(&self) -> String;
-}
-
-// Implement the trait for standard components
-impl DebuggableComponent for Name {
-    fn as_debug_string(&self) -> String {
-        format!("Name: {}", self.as_str())
-    }
-}
-
-// Add more implementations as needed for other components (Color, Transform, etc.)
-
-// Debug system to print parent-child pairs and their components
-fn print_parent_child_pairs_with_components(
-    parent_query: Query<(Entity, &Children, Option<&Name>)>,
-    child_query: Query<(Entity, &Parent, Option<&Name>)>,
-    time: Res<Time>,
-    mut timer: Local<Timer>,
-) {
-    // Initialize the timer on first run
-    if timer.finished() {
-        timer.set_duration(std::time::Duration::from_secs(3));
-        timer.reset();
-    }
-    // Set up a timer to print this information every 3 seconds
-    if timer.tick(time.delta()).finished() {
-        for (parent, children, parent_name) in parent_query.iter() {
-            let parent_info = match parent_name {
-                Some(name) => name.as_debug_string(),
-                None => "Unnamed Parent".to_string(),
-            };
-
-            println!("Parent: {:?} ({})", parent, parent_info);
-
-            for &child in children.iter() {
-                // Fetch child component if available
-                if let Ok((_, _, Some(child_name))) = child_query.get(child) {
-                    println!(
-                        "    -> Child: {:?} (Name: {})",
-                        child,
-                        child_name.as_debug_string()
-                    );
-                } else {
-                    println!("    -> Child: {:?} (Unnamed Child)", child);
-                }
-            }
-        }
-        println!("-----------------------------------------------------");
     }
 }
