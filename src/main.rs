@@ -1,4 +1,3 @@
-use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 use bevy::render::{
     camera::RenderTarget,
     render_resource::{
@@ -6,6 +5,10 @@ use bevy::render::{
     },
 };
 use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
+use bevy::{
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
+    window::PrimaryWindow,
+};
 #[allow(unused_imports)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use std::f32::consts::PI;
@@ -137,7 +140,7 @@ fn setup(
         PbrBundle {
             mesh: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
             material: materials.add(Color::srgb_u8(124, 144, 255)),
-            transform: Transform::from_xyz(0.0, 0.5, 0.0),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
         },
         Person,
@@ -235,8 +238,8 @@ fn setup(
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(-9.5, 2., 0.0).looking_at(Vec3::ZERO, Vec3::Y),
-            // transform: Transform::from_xyz(-9.5, 4.5, 0.5).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(-9.5, 2., 0.0)
+                .looking_at(Vec3::new(0., 2., 0.), Vec3::Y),
             ..default()
         },
         Person,
@@ -259,13 +262,27 @@ fn setup(
     commands.insert_resource(vocabulary);
 }
 
-fn move_player(mut query: Query<&mut Transform, With<Person>>) {
+fn move_player(
+    mut cursor_moved_events: EventReader<CursorMoved>,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+    mut query: Query<&mut Transform, With<Person>>,
+) {
     for mut transform in &mut query {
         transform.translation += Vec3 {
             x: ADVANCE_AMOUNT_PER_STEP,
             y: 0.,
             z: 0.,
         };
+        // let mouse_pos = cursor_moved_events.iter().last();
+        let window = q_windows.single();
+        if let Some(position) = window.cursor_position() {
+            println!("Cursor is inside the primary window, at {:?}", position);
+            let motion_width = 8.;
+            let z = position.x / window.width() * motion_width - motion_width / 2.;
+            transform.translation.z = z;
+        } else {
+            println!("Cursor is not in the game window.");
+        }
     }
 }
 
@@ -446,7 +463,7 @@ fn spawn_signs(
         commands,
         materials,
         images,
-        translation.japanese_word.as_str(),
+        translation.romaji.as_str(),
         transform,
         meshes,
         asset_server,
@@ -474,12 +491,31 @@ fn spawn_signs(
         commands,
         materials,
         images,
-        other_translation.japanese_word.as_str(),
+        other_translation.romaji.as_str(),
         transform,
         meshes,
         asset_server,
     );
-    println!("{}", other_translation.japanese_word);
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Cylinder::new(0.1, 2.5)),
+        material: materials.add(Color::srgb_u8(50, 50, 50)),
+        // material: materials.add(Color::srgb_u8(124, 144, 255)),
+        transform: Transform::from_xyz(distance, -0.5, 0.0),
+        ..default()
+    });
+}
+
+fn spawn_gate(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+) {
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Cylinder::new(0.0, 1.0)),
+        material: materials.add(Color::srgb_u8(124, 144, 255)),
+        transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        ..default()
+    });
 }
 
 pub fn close_on_esc(
