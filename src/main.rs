@@ -108,6 +108,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
+    mut asset_server: Res<AssetServer>,
 ) {
     let vocabulary = read_translation_file("translations.toml");
 
@@ -251,6 +252,7 @@ fn setup(
             vocabulary.ramdom_translation(),
             vocabulary.ramdom_translation(),
             25. + i as f32 * SIGN_SPACING_DISTANCE,
+            &mut asset_server,
         );
     }
 
@@ -281,6 +283,7 @@ fn sign_spawn_manager(
     query: Query<&DistanceTracker>,
     signs_query: Query<(Entity, &Transform, &Sign)>,
     vocabulary: Res<Vocabulary>,
+    mut asset_server: Res<AssetServer>,
 ) {
     let distance_traveled = query.single().distance_traveled;
 
@@ -294,7 +297,7 @@ fn sign_spawn_manager(
             removed_sign = true;
         }
     }
-
+    let spawn_distance = distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32;
     if removed_sign {
         spawn_signs(
             &mut commands,
@@ -303,7 +306,8 @@ fn sign_spawn_manager(
             &mut images,
             vocabulary.ramdom_translation(),
             vocabulary.ramdom_translation(),
-            distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32,
+            spawn_distance,
+            &mut asset_server,
         );
     }
 }
@@ -315,6 +319,7 @@ fn create_sign(
     text_content: &str,
     transform: Transform,
     meshes: &mut ResMut<Assets<Mesh>>,
+    asset_server: &mut Res<AssetServer>,
 ) -> Entity {
     let size = Extent3d {
         width: 512,
@@ -355,6 +360,8 @@ fn create_sign(
         .id();
 
     // Set up the UI text for the texture
+    // let font = asset_server.load("MesloLGS NF Regular.ttf");
+    let font = asset_server.load("NotoSansJP-Regular.ttf");
     let ui = commands
         .spawn((
             NodeBundle {
@@ -375,7 +382,8 @@ fn create_sign(
             parent.spawn(TextBundle::from_section(
                 text_content,
                 TextStyle {
-                    font_size: 80.0,
+                    font,
+                    font_size: 100.0,
                     color: Color::BLACK,
                     ..default()
                 },
@@ -426,6 +434,7 @@ fn spawn_signs(
     translation: &Translation,
     other_translation: &Translation,
     distance: f32,
+    asset_server: &mut Res<AssetServer>,
 ) {
     const SIGN_DISTANCE_FROM_CENTER: f32 = 6.;
 
@@ -437,9 +446,10 @@ fn spawn_signs(
         commands,
         materials,
         images,
-        translation.romaji.as_str(),
+        translation.japanese_word.as_str(),
         transform,
         meshes,
+        asset_server,
     );
 
     // Middle sign
@@ -453,6 +463,7 @@ fn spawn_signs(
         translation.english_translation.as_str(),
         transform,
         meshes,
+        asset_server,
     );
 
     // Right sign
@@ -463,10 +474,12 @@ fn spawn_signs(
         commands,
         materials,
         images,
-        other_translation.romaji.as_str(),
+        other_translation.japanese_word.as_str(),
         transform,
         meshes,
+        asset_server,
     );
+    println!("{}", other_translation.japanese_word);
 }
 
 pub fn close_on_esc(
