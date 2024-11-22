@@ -32,7 +32,7 @@ struct DistanceTracker {
 }
 
 const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
-const SIGN_SPACING_DISTANCE: f32 = 15.;
+const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
 #[derive(Debug, Deserialize)]
@@ -159,7 +159,8 @@ fn setup(
             },
             transform: Transform {
                 translation: Vec3::new(0.0, 5.0, 0.0),
-                rotation: Quat::from_rotation_x(-PI / 4.),
+                rotation: Quat::from_rotation_x(-PI / 2.5),
+
                 ..default()
             },
             // The default cascade config is designed to handle large scenes.
@@ -202,56 +203,32 @@ fn setup(
         Name::new("fill"),
     ));
 
-    // commands.spawn((
-    //     PointLightBundle {
-    //         point_light: PointLight {
-    //             intensity: 2_000_000.0,
-    //             shadows_enabled: true,
-    //             ..default()
-    //         },
-    //         transform: Transform::from_xyz(4.0, 8.0, 4.0),
-    //         ..default()
-    //     },
-    //     Person,
-    // ));
-    //
-    // commands.spawn((
-    //     PointLightBundle {
-    //         point_light: PointLight {
-    //             intensity: 2_000_000.0,
-    //             shadows_enabled: true,
-    //             ..default()
-    //         },
-    //         transform: Transform::from_xyz(20.0, 8.0, 4.0),
-    //         ..default()
-    //     },
-    //     Person,
-    // ));
-    //
-    // commands.spawn((
-    //     PointLightBundle {
-    //         point_light: PointLight {
-    //             intensity: 1_100_000_000.0,
-    //             shadows_enabled: true,
-    //             ..default()
-    //         },
-    //         transform: Transform::from_xyz(20.0, 20.0, 4.0),
-    //         ..default()
-    //     },
-    //     Person,
-    // ));
-    //
     commands.spawn((
-        PointLightBundle {
-            point_light: PointLight {
-                intensity: 2_000_000.0,
+        DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
+                illuminance: 2_000.,
                 shadows_enabled: true,
                 ..default()
             },
-            transform: Transform::from_xyz(-10.0, 5., 0.0),
+            transform: Transform {
+                translation: Vec3::new(0.0, 5.0, 0.0),
+                // rotation: Quat::from_rotation_z(PI / 4.),
+                rotation: Quat::from_rotation_y(5.),
+                ..default()
+            },
+            // The default cascade config is designed to handle large scenes.
+            // As this example has a much smaller world, we can tighten the shadow
+            // bounds for better visual quality.
+            cascade_shadow_config: CascadeShadowConfigBuilder {
+                first_cascade_far_bound: 4.0,
+                maximum_distance: 10.0,
+                ..default()
+            }
+            .into(),
             ..default()
         },
-        Person,
+        Name::new("forward_light"),
     ));
 
     // camera
@@ -326,7 +303,7 @@ fn sign_spawn_manager(
             &mut images,
             vocabulary.ramdom_translation(),
             vocabulary.ramdom_translation(),
-            distance_traveled + SIGN_SPACING_DISTANCE * NUMBER_OF_SIGNS as f32,
+            distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32,
         );
     }
 }
