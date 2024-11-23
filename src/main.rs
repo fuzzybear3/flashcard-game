@@ -17,7 +17,7 @@ use serde::Deserialize;
 use std::fs;
 
 use rand::seq::SliceRandom;
-use rand::thread_rng;
+use rand::{thread_rng, Rng};
 
 #[derive(Component)]
 struct Person;
@@ -26,6 +26,23 @@ struct Person;
 struct Sign {
     image_handle: Handle<Image>,
     ui_id: Entity,
+}
+
+enum GateState {
+    Passed,
+    Unpass,
+}
+#[derive(PartialEq, Debug)]
+enum CorrectSide {
+    Left,
+    Right,
+}
+
+#[derive(Component)]
+struct Gate {
+    translation: Translation,
+    gate_state: GateState,
+    correct_side: CorrectSide,
 }
 
 #[derive(Component)]
@@ -38,7 +55,7 @@ const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 enum Category {
     Adjective,
     Noun,
@@ -50,7 +67,7 @@ enum Category {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct Translation {
     japanese_word: String,
     english_translation: String,
@@ -99,6 +116,7 @@ fn main() {
                 move_distance_marker,
                 sign_spawn_manager,
                 close_on_esc,
+                gate_pass_checker,
                 // resource_debug_system,
             ),
         )
@@ -276,12 +294,9 @@ fn move_player(
         // let mouse_pos = cursor_moved_events.iter().last();
         let window = q_windows.single();
         if let Some(position) = window.cursor_position() {
-            println!("Cursor is inside the primary window, at {:?}", position);
             let motion_width = 8.;
             let z = position.x / window.width() * motion_width - motion_width / 2.;
             transform.translation.z = z;
-        } else {
-            println!("Cursor is not in the game window.");
         }
     }
 }
@@ -455,6 +470,19 @@ fn spawn_signs(
 ) {
     const SIGN_DISTANCE_FROM_CENTER: f32 = 6.;
 
+    let mut rng = rand::thread_rng();
+    let correct_side = if rng.gen_bool(0.5) {
+        // 50% chance for each side
+        CorrectSide::Left
+    } else {
+        CorrectSide::Right
+    };
+
+    let (left_translation, right_translation) = match correct_side {
+        CorrectSide::Left => (translation, other_translation),
+        CorrectSide::Right => (other_translation, translation),
+    };
+
     // Left sign
     let transform = Transform::from_xyz(distance, 1.5, -SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.));
@@ -463,7 +491,7 @@ fn spawn_signs(
         commands,
         materials,
         images,
-        translation.romaji.as_str(),
+        left_translation.romaji.as_str(),
         transform,
         meshes,
         asset_server,
@@ -491,18 +519,25 @@ fn spawn_signs(
         commands,
         materials,
         images,
-        other_translation.romaji.as_str(),
+        right_translation.romaji.as_str(),
         transform,
         meshes,
         asset_server,
     );
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Cylinder::new(0.1, 2.5)),
-        material: materials.add(Color::srgb_u8(50, 50, 50)),
-        // material: materials.add(Color::srgb_u8(124, 144, 255)),
-        transform: Transform::from_xyz(distance, -0.5, 0.0),
-        ..default()
-    });
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Cylinder::new(0.1, 2.5)),
+            material: materials.add(Color::srgb_u8(50, 50, 50)),
+            // material: materials.add(Color::srgb_u8(124, 144, 255)),
+            transform: Transform::from_xyz(distance, -0.5, 0.0),
+            ..default()
+        },
+        Gate {
+            translation: translation.to_owned(),
+            gate_state: GateState::Unpass,
+            correct_side,
+        },
+    ));
 }
 
 fn spawn_gate(
@@ -516,6 +551,41 @@ fn spawn_gate(
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..default()
     });
+}
+
+fn gate_pass_checker(
+    mut query: Query<(&Transform, &mut Gate)>,
+    single_query: Query<&DistanceTracker>,
+    player_query: Query<&Transform, With<Person>>,
+) {
+    for (transform, mut gate) in &mut query {
+        match gate.gate_state {
+            GateState::Passed => {}
+            GateState::Unpass => {
+                let distance_traveled = single_query.single().distance_traveled;
+                let player_trastform = player_query.iter().last().unwrap();
+                if distance_traveled >= transform.translation.x {
+                    let player_side = if player_trastform.translation.z > 0. {
+                        CorrectSide::Right
+                    } else {
+                        CorrectSide::Left
+                    };
+
+                    if gate.correct_side == player_side {
+                        println!("passed on correct side");
+                    } else {
+                        println!("passed on the wrong side");
+                        println!(
+                            "the correct translation for {} is => {}",
+                            gate.translation.english_translation, gate.translation.romaji
+                        );
+                        println!("---------------------------");
+                    }
+                    gate.gate_state = GateState::Passed;
+                }
+            }
+        }
+    }
 }
 
 pub fn close_on_esc(
