@@ -90,6 +90,19 @@ impl Vocabulary {
             .choose(&mut rng)
             .expect("Vocabulary vec is empty")
     }
+
+    fn ramdom_translation_pair(&self) -> (&Translation, &Translation) {
+        let mut rng = thread_rng();
+
+        // Choose two random elements from the vector
+        let chosen: Vec<&Translation> = self.translations.choose_multiple(&mut rng, 2).collect();
+
+        // Unwrap the first two chosen elements or panic if not enough elements
+        match chosen.as_slice() {
+            [first, second] => (*first, *second),
+            _ => panic!("Not enough elements in translations vector"),
+        }
+    }
 }
 
 fn main() {
@@ -265,13 +278,14 @@ fn setup(
 
     // spawn first sign
     for i in 0..3 {
+        let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
         spawn_signs(
             &mut commands,
             &mut meshes,
             &mut materials,
             &mut images,
-            vocabulary.ramdom_translation(),
-            vocabulary.ramdom_translation(),
+            main_translation,
+            off_translation,
             25. + i as f32 * SIGN_SPACING_DISTANCE,
             &mut asset_server,
         );
@@ -329,15 +343,17 @@ fn sign_spawn_manager(
             removed_sign = true;
         }
     }
+
     let spawn_distance = distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32;
     if removed_sign {
+        let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
         spawn_signs(
             &mut commands,
             &mut meshes,
             &mut materials,
             &mut images,
-            vocabulary.ramdom_translation(),
-            vocabulary.ramdom_translation(),
+            main_translation,
+            off_translation,
             spawn_distance,
             &mut asset_server,
         );
@@ -469,6 +485,7 @@ fn spawn_signs(
     asset_server: &mut Res<AssetServer>,
 ) {
     const SIGN_DISTANCE_FROM_CENTER: f32 = 6.;
+    let sign_distance = distance + 5.;
 
     let mut rng = rand::thread_rng();
     let correct_side = if rng.gen_bool(0.5) {
@@ -483,22 +500,33 @@ fn spawn_signs(
         CorrectSide::Right => (other_translation, translation),
     };
 
+    let (left_text, right_text) = if true {
+        (
+            left_translation.romaji.as_str(),
+            right_translation.romaji.as_str(),
+        )
+    } else {
+        (
+            left_translation.japanese_word.as_str(),
+            right_translation.japanese_word.as_str(),
+        )
+    };
     // Left sign
-    let transform = Transform::from_xyz(distance, 1.5, -SIGN_DISTANCE_FROM_CENTER)
+    let transform = Transform::from_xyz(sign_distance, 1.5, -SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.));
 
     create_sign(
         commands,
         materials,
         images,
-        left_translation.romaji.as_str(),
+        left_text,
         transform,
         meshes,
         asset_server,
     );
 
     // Middle sign
-    let transform = Transform::from_xyz(distance, 4.5, 0.0)
+    let transform = Transform::from_xyz(sign_distance, 4.5, 0.0)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_y(-PI / 16.));
 
     create_sign(
@@ -512,14 +540,14 @@ fn spawn_signs(
     );
 
     // Right sign
-    let transform = Transform::from_xyz(distance, 1.5, SIGN_DISTANCE_FROM_CENTER)
+    let transform = Transform::from_xyz(sign_distance, 1.5, SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
 
     create_sign(
         commands,
         materials,
         images,
-        right_translation.romaji.as_str(),
+        right_text,
         transform,
         meshes,
         asset_server,
