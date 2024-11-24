@@ -51,7 +51,8 @@ struct DistanceTracker {
     _distance_from_last_sign: f32,
 }
 
-const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
+const ADVANCE_AMOUNT_PER_STEP: f32 = 0.0001;
+// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
@@ -108,7 +109,7 @@ impl Vocabulary {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        // .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
                 text_config: TextStyle {
@@ -130,7 +131,7 @@ fn main() {
                 sign_spawn_manager,
                 close_on_esc,
                 gate_pass_checker,
-                // resource_debug_system,
+                resource_debug_system,
             ),
         )
         .run();
@@ -271,6 +272,11 @@ fn setup(
         Camera3dBundle {
             transform: Transform::from_xyz(-9.5, 2., 0.0)
                 .looking_at(Vec3::new(0., 2., 0.), Vec3::Y),
+            camera: Camera {
+                order: -2,
+                ..default()
+            },
+
             ..default()
         },
         Person,
@@ -279,7 +285,7 @@ fn setup(
     // spawn first sign
     for i in 0..3 {
         let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
-        spawn_signs(
+        spawn_gate(
             &mut commands,
             &mut meshes,
             &mut materials,
@@ -328,35 +334,39 @@ fn sign_spawn_manager(
     mut images: ResMut<Assets<Image>>,
     query: Query<&DistanceTracker>,
     signs_query: Query<(Entity, &Transform, &Sign)>,
+    gate_query: Query<(Entity, &Transform), With<Gate>>,
     vocabulary: Res<Vocabulary>,
     mut asset_server: Res<AssetServer>,
 ) {
     let distance_traveled = query.single().distance_traveled;
 
     // remove old signs
-    let mut removed_sign = false;
-    for (entity, transform, sign) in &signs_query {
-        if distance_traveled - transform.translation.x > 10. {
-            images.remove(sign.image_handle.id());
-            commands.entity(entity).despawn_recursive();
-            commands.entity(sign.ui_id).despawn_recursive();
-            removed_sign = true;
-        }
-    }
+    // for (entity, transform, sign) in &signs_query {
+    //     if distance_traveled - transform.translation.x > 10. {
+    //         images.remove(sign.image_handle.id());
+    //         commands.entity(entity).despawn_recursive();
+    //         commands.entity(sign.ui_id).despawn_recursive();
+    //         removed_sign = true;
+    //     }
+    // }
 
-    let spawn_distance = distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32;
-    if removed_sign {
-        let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
-        spawn_signs(
-            &mut commands,
-            &mut meshes,
-            &mut materials,
-            &mut images,
-            main_translation,
-            off_translation,
-            spawn_distance,
-            &mut asset_server,
-        );
+    for (entity, gate_transform) in &gate_query {
+        if distance_traveled - gate_transform.translation.x > 10. {
+            commands.entity(entity).despawn_recursive();
+            let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
+            let spawn_distance =
+                distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32;
+            spawn_gate(
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+                &mut images,
+                main_translation,
+                off_translation,
+                spawn_distance,
+                &mut asset_server,
+            );
+        }
     }
 }
 
@@ -368,6 +378,7 @@ fn create_sign(
     transform: Transform,
     meshes: &mut ResMut<Assets<Mesh>>,
     asset_server: &mut Res<AssetServer>,
+    gate_id: &Entity,
 ) -> Entity {
     let size = Extent3d {
         width: 512,
@@ -449,13 +460,16 @@ fn create_sign(
 
     // commands.entity(parent_entity).add_child(ui);
     let sign_mesh = commands
-        .spawn((PbrBundle {
-            mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
-            // material: materials.add(Color::srgb_u8(124, 144, 255)),
-            material: material_handle,
-            transform,
-            ..default()
-        },))
+        .spawn((
+            PbrBundle {
+                mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
+                // material: materials.add(Color::srgb_u8(124, 144, 255)),
+                material: material_handle,
+                transform,
+                ..default()
+            },
+            Name::new("sign"),
+        ))
         .id();
 
     // commands.entity(sign_mesh).add_child(ui);
@@ -464,6 +478,7 @@ fn create_sign(
         ui_id: ui,
     });
     commands.entity(sign_mesh).add_child(texture_camera);
+    commands.entity(sign_mesh).add_child(ui);
 
     // todo I don't know why but if I add ui as a child of sign_mesh, the signs are black.... so
     // for a work around I am storing the id in the Sign component and despawning it manually.
@@ -471,10 +486,13 @@ fn create_sign(
     //     .entity(sign_mesh)
     //     .push_children(&[texture_camera, ui]);
 
+    commands.entity(*gate_id).add_child(sign_mesh);
+    // commands.entity(*gate_id).add_child(sign_mesh);
+
     sign_mesh
 }
 
-fn spawn_signs(
+fn spawn_gate(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -485,7 +503,7 @@ fn spawn_signs(
     asset_server: &mut Res<AssetServer>,
 ) {
     const SIGN_DISTANCE_FROM_CENTER: f32 = 6.;
-    let sign_distance = distance + 5.;
+    let sign_distance_from_gate = 5.;
 
     let mut rng = rand::thread_rng();
     let correct_side = if rng.gen_bool(0.5) {
@@ -500,6 +518,22 @@ fn spawn_signs(
         CorrectSide::Right => (other_translation, translation),
     };
 
+    let gate_id = commands
+        .spawn((
+            PbrBundle {
+                mesh: meshes.add(Cylinder::new(0.1, 2.5)),
+                material: materials.add(Color::srgb_u8(50, 50, 50)),
+                transform: Transform::from_xyz(distance, -0.5, 0.0),
+                ..default()
+            },
+            Gate {
+                translation: translation.to_owned(),
+                gate_state: GateState::Unpass,
+                correct_side,
+            },
+        ))
+        .id();
+
     let (left_text, right_text) = if true {
         (
             left_translation.romaji.as_str(),
@@ -512,7 +546,7 @@ fn spawn_signs(
         )
     };
     // Left sign
-    let transform = Transform::from_xyz(sign_distance, 1.5, -SIGN_DISTANCE_FROM_CENTER)
+    let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, -SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.));
 
     create_sign(
@@ -523,10 +557,11 @@ fn spawn_signs(
         transform,
         meshes,
         asset_server,
+        &gate_id,
     );
 
     // Middle sign
-    let transform = Transform::from_xyz(sign_distance, 4.5, 0.0)
+    let transform = Transform::from_xyz(sign_distance_from_gate, 4.5, 0.0)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_y(-PI / 16.));
 
     create_sign(
@@ -537,10 +572,11 @@ fn spawn_signs(
         transform,
         meshes,
         asset_server,
+        &gate_id,
     );
 
     // Right sign
-    let transform = Transform::from_xyz(sign_distance, 1.5, SIGN_DISTANCE_FROM_CENTER)
+    let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
 
     create_sign(
@@ -551,34 +587,8 @@ fn spawn_signs(
         transform,
         meshes,
         asset_server,
+        &gate_id,
     );
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Cylinder::new(0.1, 2.5)),
-            material: materials.add(Color::srgb_u8(50, 50, 50)),
-            // material: materials.add(Color::srgb_u8(124, 144, 255)),
-            transform: Transform::from_xyz(distance, -0.5, 0.0),
-            ..default()
-        },
-        Gate {
-            translation: translation.to_owned(),
-            gate_state: GateState::Unpass,
-            correct_side,
-        },
-    ));
-}
-
-fn spawn_gate(
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-) {
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Cylinder::new(0.0, 1.0)),
-        material: materials.add(Color::srgb_u8(124, 144, 255)),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        ..default()
-    });
 }
 
 fn gate_pass_checker(
