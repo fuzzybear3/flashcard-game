@@ -48,6 +48,7 @@ struct Gate {
     translation: Translation,
     gate_state: GateState,
     correct_side: CorrectSide,
+    material_handle: Handle<StandardMaterial>,
 }
 
 #[derive(Component)]
@@ -274,13 +275,8 @@ fn setup(
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(-9.5, 2., 0.0)
+            transform: Transform::from_xyz(-11., 2., 0.0)
                 .looking_at(Vec3::new(0., 2., 0.), Vec3::Y),
-            camera: Camera {
-                order: -2,
-                ..default()
-            },
-
             ..default()
         },
         Person,
@@ -521,8 +517,8 @@ fn spawn_gate(
     distance: f32,
     asset_server: &mut Res<AssetServer>,
 ) {
-    const SIGN_DISTANCE_FROM_CENTER: f32 = 6.;
-    let sign_distance_from_gate = 5.;
+    const SIGN_DISTANCE_FROM_CENTER: f32 = 5.5;
+    let sign_distance_from_gate = 6.;
 
     let mut rng = rand::thread_rng();
     let correct_side = if rng.gen_bool(0.5) {
@@ -537,11 +533,12 @@ fn spawn_gate(
         CorrectSide::Right => (other_translation, translation),
     };
 
+    let gate_material_handle = materials.add(Color::srgb_u8(50, 50, 50));
     let gate_id = commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Cylinder::new(0.1, 2.5)),
-                material: materials.add(Color::srgb_u8(50, 50, 50)),
+                mesh: meshes.add(Cylinder::new(0.2, 2.5)),
+                material: gate_material_handle.clone(),
                 transform: Transform::from_xyz(distance, -0.5, 0.0),
                 ..default()
             },
@@ -549,6 +546,7 @@ fn spawn_gate(
                 translation: translation.to_owned(),
                 gate_state: GateState::Unpass,
                 correct_side,
+                material_handle: gate_material_handle,
             },
         ))
         .id();
@@ -614,6 +612,7 @@ fn gate_pass_checker(
     mut query: Query<(&Transform, &mut Gate)>,
     single_query: Query<&DistanceTracker>,
     player_query: Query<&Transform, With<Person>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (transform, mut gate) in &mut query {
         match gate.gate_state {
@@ -630,12 +629,18 @@ fn gate_pass_checker(
 
                     if gate.correct_side == player_side {
                         println!("passed on correct side");
+                        if let Some(material) = materials.get_mut(&gate.material_handle) {
+                            material.base_color = Color::srgb(0.2, 0.8, 0.2);
+                        }
                     } else {
                         println!("passed on the wrong side");
                         println!(
                             "the correct translation for {} is => {}",
                             gate.translation.english_translation, gate.translation.romaji
                         );
+                        if let Some(material) = materials.get_mut(&gate.material_handle) {
+                            material.base_color = Color::srgb(0.8, 0.2, 0.2);
+                        }
                         println!("---------------------------");
                     }
                     gate.gate_state = GateState::Passed;
