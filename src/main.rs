@@ -28,6 +28,9 @@ use rand::{thread_rng, Rng};
 struct Person;
 
 #[derive(Component)]
+struct TextUi;
+
+#[derive(Component)]
 struct Sign {
     image_handle: Handle<Image>,
     ui_id: Entity,
@@ -119,7 +122,7 @@ fn main() {
             config: FpsOverlayConfig {
                 text_config: TextStyle {
                     // Here we define size of our overlay
-                    font_size: 50.0,
+                    font_size: 25.0,
                     // We can also change color of the overlay
                     color: Color::srgb(0.0, 1.0, 0.0),
                     // If we want, we can use a custom font
@@ -136,7 +139,7 @@ fn main() {
                 sign_spawn_manager,
                 close_on_esc,
                 gate_pass_checker,
-                resource_debug_system,
+                // resource_debug_system,
             ),
         )
         .run();
@@ -172,6 +175,30 @@ fn setup(
             },));
         }
     }
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "hello\nplayer!",
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                font_size: 30.0,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_text_justify(JustifyText::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            right: Val::Px(5.0),
+            ..default()
+        }),
+        TextUi,
+    ));
+
     // cube
     commands.spawn((
         PbrBundle {
@@ -613,6 +640,7 @@ fn gate_pass_checker(
     single_query: Query<&DistanceTracker>,
     player_query: Query<&Transform, With<Person>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut ui_query: Query<&mut Text, With<TextUi>>,
 ) {
     for (transform, mut gate) in &mut query {
         match gate.gate_state {
@@ -627,15 +655,19 @@ fn gate_pass_checker(
                         CorrectSide::Left
                     };
 
+                    let mut ui = ui_query.single_mut();
                     if gate.correct_side == player_side {
-                        println!("passed on correct side");
+                        ui.sections[0].value = format!(
+                            "Correct: \"{}\" => \"{}\"",
+                            gate.translation.english_translation, gate.translation.romaji
+                        );
+
                         if let Some(material) = materials.get_mut(&gate.material_handle) {
                             material.base_color = Color::srgb(0.2, 0.8, 0.2);
                         }
                     } else {
-                        println!("passed on the wrong side");
-                        println!(
-                            "the correct translation for {} is => {}",
+                        ui.sections[0].value = format!(
+                            "Incorrect: \"{}\" => \"{}\"",
                             gate.translation.english_translation, gate.translation.romaji
                         );
                         if let Some(material) = materials.get_mut(&gate.material_handle) {
