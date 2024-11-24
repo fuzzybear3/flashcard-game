@@ -1,12 +1,17 @@
 use bevy::render::{
     camera::RenderTarget,
-    render_resource::{
-        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-    },
+    // render_resource::{
+    //     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+    // },
 };
 use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy::{
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
+    render::{
+        render_asset::RenderAssetUsages,
+        render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
+        view::RenderLayers,
+    },
     window::PrimaryWindow,
 };
 #[allow(unused_imports)]
@@ -51,8 +56,7 @@ struct DistanceTracker {
     _distance_from_last_sign: f32,
 }
 
-const ADVANCE_AMOUNT_PER_STEP: f32 = 0.0001;
-// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
+const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
@@ -109,7 +113,7 @@ impl Vocabulary {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(WorldInspectorPlugin::new())
+        // .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
                 text_config: TextStyle {
@@ -333,25 +337,23 @@ fn sign_spawn_manager(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
     query: Query<&DistanceTracker>,
-    signs_query: Query<(Entity, &Transform, &Sign)>,
-    gate_query: Query<(Entity, &Transform), With<Gate>>,
+    // signs_query: Query<(Entity, &Transform, &Sign)>,
+    signs_query: Query<&Sign>,
+    gate_query: Query<(Entity, &Transform, &Children), With<Gate>>,
     vocabulary: Res<Vocabulary>,
     mut asset_server: Res<AssetServer>,
 ) {
     let distance_traveled = query.single().distance_traveled;
 
-    // remove old signs
-    // for (entity, transform, sign) in &signs_query {
-    //     if distance_traveled - transform.translation.x > 10. {
-    //         images.remove(sign.image_handle.id());
-    //         commands.entity(entity).despawn_recursive();
-    //         commands.entity(sign.ui_id).despawn_recursive();
-    //         removed_sign = true;
-    //     }
-    // }
-
-    for (entity, gate_transform) in &gate_query {
+    // Despawn Gate
+    for (entity, gate_transform, children) in &gate_query {
         if distance_traveled - gate_transform.translation.x > 10. {
+            for child in children {
+                if let Ok(sign) = signs_query.get(*child) {
+                    images.remove(sign.image_handle.id());
+                    commands.entity(sign.ui_id).despawn_recursive();
+                }
+            }
             commands.entity(entity).despawn_recursive();
             let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
             let spawn_distance =
@@ -386,25 +388,42 @@ fn create_sign(
         ..default()
     };
 
-    let mut image = Image {
-        texture_descriptor: TextureDescriptor {
-            label: None,
-            size,
-            dimension: TextureDimension::D2,
-            format: TextureFormat::Bgra8UnormSrgb,
-            mip_level_count: 1,
-            sample_count: 1,
-            usage: TextureUsages::TEXTURE_BINDING
-                | TextureUsages::COPY_DST
-                | TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        },
-        ..default()
-    };
-    // Fill image data with zeroes
-    image.resize(size);
+    // let mut image = Image {
+    //     texture_descriptor: TextureDescriptor {
+    //         label: None,
+    //         size,
+    //         dimension: TextureDimension::D2,
+    //         format: TextureFormat::Bgra8UnormSrgb,
+    //         mip_level_count: 1,
+    //         sample_count: 1,
+    //         usage: TextureUsages::TEXTURE_BINDING
+    //             | TextureUsages::COPY_DST
+    //             | TextureUsages::RENDER_ATTACHMENT,
+    //         view_formats: &[],
+    //     },
+    //     ..default()
+    // };
+
+    // This is the texture that will be rendered to.
+    let mut image = Image::new_fill(
+        size,
+        TextureDimension::D2,
+        &[0, 0, 0, 0],
+        TextureFormat::Bgra8UnormSrgb,
+        RenderAssetUsages::default(),
+    );
+
+    // You need to set these texture usage flags in order to use the image as a render target
+    image.texture_descriptor.usage =
+        TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST | TextureUsages::RENDER_ATTACHMENT;
+
+    // // Fill image data with zeroes
+    // image.resize(size);
 
     let image_handle = images.add(image);
+
+    // This specifies the layer used for the first pass, which will be attached to the first pass camera and cube.
+    let first_pass_layer = RenderLayers::layer(1);
 
     // Create a unique camera for rendering each texture with different text
     let texture_camera = commands
@@ -478,7 +497,7 @@ fn create_sign(
         ui_id: ui,
     });
     commands.entity(sign_mesh).add_child(texture_camera);
-    commands.entity(sign_mesh).add_child(ui);
+    // commands.entity(sign_mesh).add_child(ui);
 
     // todo I don't know why but if I add ui as a child of sign_mesh, the signs are black.... so
     // for a work around I am storing the id in the Sign component and despawning it manually.
