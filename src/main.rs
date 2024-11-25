@@ -67,13 +67,28 @@ const NUMBER_OF_SIGNS: u32 = 4;
 #[derive(Debug, Deserialize, Clone)]
 enum Category {
     Adjective,
+    Adverb,
     Noun,
-    Expression,
+    Pronoun, // Add this line
     Verb,
     Time,
     Question,
     Response,
+    Conjunction,       // e.g., "and," "but"
+    Interjection,      // e.g., "yes," "no," "thank you"
+    PreNounAdjectival, // modifiers before nouns, like "that"
+    SuruVerb,          // nouns that can be used with "suru" to make verbs (e.g., 勉強する)
 }
+
+// enum Category {
+//     Adjective,
+//     Noun,
+//     Expression,
+//     Verb,
+//     Time,
+//     Question,
+//     Response,
+// }
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize, Clone)]
@@ -154,6 +169,7 @@ fn setup(
     mut asset_server: Res<AssetServer>,
 ) {
     let vocabulary = read_translation_file("translations.toml");
+    // let vocabulary = read_translation_file("N5_transtlations.toml");
 
     // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
@@ -161,7 +177,7 @@ fn setup(
 
     let plane_mesh = meshes.add(Plane3d::default().mesh().size(2.0, 2.0));
 
-    for x in -3..600 {
+    for x in -3..1500 {
         for z in -2..3 {
             commands.spawn((PbrBundle {
                 mesh: plane_mesh.clone(),

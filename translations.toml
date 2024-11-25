@@ -233,24 +233,6 @@ english_translation = "lost"
 category = "Noun"
 
 [[translations]]
-japanese_word = "気を付けて"
-romaji = "kiwotsukete"
-english_translation = "careful"
-category = "Expression"
-
-[[translations]]
-japanese_word = "良かった"
-romaji = "yokatta"
-english_translation = "this is good/I'm happy"
-category = "Expression"
-
-[[translations]]
-japanese_word = "お会いできて嬉しいです"
-romaji = "oaidekite ureshii desu"
-english_translation = "happy to (see you)"
-category = "Expression"
-
-[[translations]]
 japanese_word = "見る"
 romaji = "mimasu"
 english_translation = "watch"
