@@ -168,8 +168,13 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut asset_server: Res<AssetServer>,
 ) {
-    let vocabulary = read_translation_file("translations.toml");
+    let mut vocabulary = read_translation_file("translations.toml");
     // let vocabulary = read_translation_file("N5_transtlations.toml");
+
+    let extra_vocabulary = read_translation_file("N5_transtlations.toml");
+    vocabulary
+        .translations
+        .extend(extra_vocabulary.translations);
 
     // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
@@ -218,7 +223,7 @@ fn setup(
     // cube
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
+            mesh: meshes.add(Cuboid::new(0.8, 0.5, 0.6)),
             material: materials.add(Color::srgb_u8(124, 144, 255)),
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
@@ -318,7 +323,7 @@ fn setup(
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(-11., 2., 0.0)
+            transform: Transform::from_xyz(-10., 1.5, 0.0)
                 .looking_at(Vec3::new(0., 2., 0.), Vec3::Y),
             ..default()
         },
@@ -520,7 +525,7 @@ fn create_sign(
     let sign_mesh = commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Cuboid::new(1.0, 6.0, 3.0)),
+                mesh: meshes.add(Cuboid::new(1.0, 4.0, 2.5)),
                 // material: materials.add(Color::srgb_u8(124, 144, 255)),
                 material: material_handle,
                 transform,
@@ -560,8 +565,8 @@ fn spawn_gate(
     distance: f32,
     asset_server: &mut Res<AssetServer>,
 ) {
-    const SIGN_DISTANCE_FROM_CENTER: f32 = 5.5;
-    let sign_distance_from_gate = 6.;
+    const SIGN_DISTANCE_FROM_CENTER: f32 = 4.;
+    let sign_distance_from_gate = 3.;
 
     let mut rng = rand::thread_rng();
     let correct_side = if rng.gen_bool(0.5) {
@@ -689,7 +694,6 @@ fn gate_pass_checker(
                         if let Some(material) = materials.get_mut(&gate.material_handle) {
                             material.base_color = Color::srgb(0.8, 0.2, 0.2);
                         }
-                        println!("---------------------------");
                     }
                     gate.gate_state = GateState::Passed;
                 }
@@ -747,7 +751,6 @@ fn resource_debug_system(
         // Print debug information
         println!("=== Debug Information ===");
         println!("Total entities: {}", num_entities);
-        // println!("Number of Textures: {}", num_textures);
         println!("Number of Images: {}", num_images);
         println!("Number of Meshes: {}", num_meshes);
         println!("Number of Cameras: {}", num_cameras);
