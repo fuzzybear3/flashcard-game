@@ -168,10 +168,10 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut asset_server: Res<AssetServer>,
 ) {
-    let mut vocabulary = read_translation_file("translations.toml");
+    let mut vocabulary = read_translation_file("dictionary/translations.toml");
     // let vocabulary = read_translation_file("N5_transtlations.toml");
 
-    let extra_vocabulary = read_translation_file("N5_transtlations.toml");
+    let extra_vocabulary = read_translation_file("dictionary/N5_transtlations.toml");
     vocabulary
         .translations
         .extend(extra_vocabulary.translations);
