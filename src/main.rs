@@ -639,7 +639,6 @@ fn gate_pass_checker(
     single_query: Query<&DistanceTracker>,
     player_query: Query<&Transform, With<Person>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut ui_query: Query<&mut Text, With<TextUi>>,
     mut ui_interface: ResMut<UiInterface>,
 ) {
     for (transform, mut gate) in &mut query {
@@ -655,12 +654,13 @@ fn gate_pass_checker(
                         CorrectSide::Left
                     };
 
-                    let mut ui = ui_query.single_mut();
                     if gate.correct_side == player_side {
                         ui_interface.text_output = format!(
                             "Correct: \"{}\" => \"{}\"",
                             gate.translation.english_translation, gate.translation.romaji
                         );
+
+                        ui_interface.streak += 1;
 
                         if let Some(material) = materials.get_mut(&gate.material_handle) {
                             material.base_color = Color::srgb(0.2, 0.8, 0.2);
@@ -670,6 +670,9 @@ fn gate_pass_checker(
                             "Incorrect: \"{}\" => \"{}\"",
                             gate.translation.english_translation, gate.translation.romaji
                         );
+
+                        ui_interface.streak = 0;
+
                         if let Some(material) = materials.get_mut(&gate.material_handle) {
                             material.base_color = Color::srgb(0.8, 0.2, 0.2);
                         }
