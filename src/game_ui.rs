@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use bevy::app::App;
 use bevy::prelude::*;
 
@@ -7,7 +9,9 @@ pub struct TextUi;
 pub struct GameUI;
 
 #[derive(Resource)]
-pub struct TextOutput(pub String);
+pub struct UiInterface {
+    pub text_output: String,
+}
 
 // Add the resource to the app
 // app.insert_resource(Score(0));
@@ -17,7 +21,9 @@ impl Plugin for GameUI {
         // app.init_resource::<MyOtherResource>();
         // app.add_event::<MyEvent>();
         app.add_systems(Startup, plugin_init)
-            .insert_resource(TextOutput(String::new()));
+            .insert_resource(UiInterface {
+                text_output: String::from("Hello"),
+            });
         app.add_systems(Update, update_ui);
     }
 }
@@ -47,7 +53,7 @@ fn plugin_init(mut commands: Commands) {
     ));
 }
 
-fn update_ui(text_output: Res<TextOutput>, mut ui_query: Query<&mut Text, With<TextUi>>) {
+fn update_ui(ui_interface: Res<UiInterface>, mut ui_query: Query<&mut Text, With<TextUi>>) {
     let mut ui = ui_query.single_mut();
-    ui.sections[0].value = text_output.0.clone();
+    ui.sections[0].value = ui_interface.text_output.clone();
 }

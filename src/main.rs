@@ -169,10 +169,10 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut asset_server: Res<AssetServer>,
 ) {
-    let mut vocabulary = read_translation_file("dictionary/translations.toml");
+    let mut vocabulary = read_translation_file("dictionary/N5_transtlations.toml");
     // let vocabulary = read_translation_file("N5_transtlations.toml");
 
-    let extra_vocabulary = read_translation_file("dictionary/N5_transtlations.toml");
+    let extra_vocabulary = read_translation_file("dictionary/translations.toml");
     vocabulary
         .translations
         .extend(extra_vocabulary.translations);
@@ -640,7 +640,7 @@ fn gate_pass_checker(
     player_query: Query<&Transform, With<Person>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ui_query: Query<&mut Text, With<TextUi>>,
-    mut text_output: ResMut<TextOutput>,
+    mut ui_interface: ResMut<UiInterface>,
 ) {
     for (transform, mut gate) in &mut query {
         match gate.gate_state {
@@ -657,7 +657,7 @@ fn gate_pass_checker(
 
                     let mut ui = ui_query.single_mut();
                     if gate.correct_side == player_side {
-                        text_output.0 = format!(
+                        ui_interface.text_output = format!(
                             "Correct: \"{}\" => \"{}\"",
                             gate.translation.english_translation, gate.translation.romaji
                         );
@@ -666,7 +666,7 @@ fn gate_pass_checker(
                             material.base_color = Color::srgb(0.2, 0.8, 0.2);
                         }
                     } else {
-                        text_output.0 = format!(
+                        ui_interface.text_output = format!(
                             "Incorrect: \"{}\" => \"{}\"",
                             gate.translation.english_translation, gate.translation.romaji
                         );
