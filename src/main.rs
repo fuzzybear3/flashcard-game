@@ -24,11 +24,11 @@ use std::fs;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 
-#[derive(Component)]
-struct Person;
+mod game_ui;
+use game_ui::*;
 
 #[derive(Component)]
-struct TextUi;
+struct Person;
 
 #[derive(Component)]
 struct Sign {
@@ -132,6 +132,7 @@ impl Vocabulary {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(GameUI)
         // .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
@@ -196,29 +197,6 @@ fn setup(
             },));
         }
     }
-
-    commands.spawn((
-        // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_section(
-            // Accepts a `String` or any type that converts into a `String`, such as `&str`
-            "hello\nplayer!",
-            TextStyle {
-                // This font is loaded and will be used instead of the default font.
-                // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                font_size: 30.0,
-                ..default()
-            },
-        ) // Set the justification of the Text
-        .with_text_justify(JustifyText::Center)
-        // Set the style of the TextBundle itself.
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(5.0),
-            right: Val::Px(5.0),
-            ..default()
-        }),
-        TextUi,
-    ));
 
     // cube
     commands.spawn((
@@ -662,6 +640,7 @@ fn gate_pass_checker(
     player_query: Query<&Transform, With<Person>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ui_query: Query<&mut Text, With<TextUi>>,
+    mut text_output: ResMut<TextOutput>,
 ) {
     for (transform, mut gate) in &mut query {
         match gate.gate_state {
@@ -678,7 +657,7 @@ fn gate_pass_checker(
 
                     let mut ui = ui_query.single_mut();
                     if gate.correct_side == player_side {
-                        ui.sections[0].value = format!(
+                        text_output.0 = format!(
                             "Correct: \"{}\" => \"{}\"",
                             gate.translation.english_translation, gate.translation.romaji
                         );
@@ -687,7 +666,7 @@ fn gate_pass_checker(
                             material.base_color = Color::srgb(0.2, 0.8, 0.2);
                         }
                     } else {
-                        ui.sections[0].value = format!(
+                        text_output.0 = format!(
                             "Incorrect: \"{}\" => \"{}\"",
                             gate.translation.english_translation, gate.translation.romaji
                         );
