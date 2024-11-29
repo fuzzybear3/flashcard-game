@@ -1,5 +1,5 @@
-use bevy::app::App;
 use bevy::prelude::*;
+use bevy::{app::App, asset::saver::AssetSaver};
 
 #[derive(Component)]
 struct TextFeedBack;
@@ -28,7 +28,7 @@ impl Plugin for GameUI {
     }
 }
 
-fn plugin_init(mut commands: Commands) {
+fn plugin_init(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         // Create a TextBundle that has a Text with a single section.
         TextBundle::from_section(
@@ -37,6 +37,7 @@ fn plugin_init(mut commands: Commands) {
             TextStyle {
                 // This font is loaded and will be used instead of the default font.
                 // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                font: asset_server.load("NotoSansJP-Regular.ttf"),
                 font_size: 30.0,
                 ..default()
             },

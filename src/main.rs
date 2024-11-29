@@ -224,16 +224,23 @@ fn setup(
         .translations
         .extend(extra_vocabulary.translations);
 
+    let hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
+
     let mut new_list = WordList { words: Vec::new() };
 
-    for translation in vocabulary.translations {
+    // for translation in vocabulary.translations {
+    //     new_list.words.push(Word {
+    //         word: translation.english_translation.clone(),
+    //         translation: translation.romaji.clone(),
+    //     });
+    // }
+    //
+    for hiragana in hiragana_list.hiragana {
         new_list.words.push(Word {
-            word: translation.english_translation.clone(),
-            translation: translation.romaji.clone(),
+            word: hiragana.character.clone(),
+            translation: hiragana.romaji.clone(),
         });
     }
-
-    let hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
 
     // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
@@ -636,7 +643,7 @@ fn spawn_gate(
         .id();
 
     let (left_text, right_text) = (
-        left_translation.word.as_str(),
+        left_translation.translation.as_str(),
         right_translation.translation.as_str(),
     );
 
@@ -673,16 +680,16 @@ fn spawn_gate(
     let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
 
-    // create_sign(
-    //     commands,
-    //     materials,
-    //     images,
-    //     right_text,
-    //     transform,
-    //     meshes,
-    //     asset_server,
-    //     &gate_id,
-    // );
+    create_sign(
+        commands,
+        materials,
+        images,
+        right_text,
+        transform,
+        meshes,
+        asset_server,
+        &gate_id,
+    );
 }
 
 fn gate_pass_checker(
