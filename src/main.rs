@@ -48,7 +48,7 @@ enum CorrectSide {
 
 #[derive(Component)]
 struct Gate {
-    translation: Translation,
+    word: Word,
     gate_state: GateState,
     correct_side: CorrectSide,
     material_handle: Handle<StandardMaterial>,
@@ -92,7 +92,7 @@ enum Category {
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize, Clone)]
-struct Translation {
+struct FullWord {
     japanese_word: String,
     english_translation: String,
     category: Category,
@@ -101,11 +101,24 @@ struct Translation {
 
 #[derive(Debug, Deserialize, Resource)]
 struct Vocabulary {
-    translations: Vec<Translation>,
+    translations: Vec<FullWord>,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Deserialize, Clone)]
+struct Hiragana {
+    character: String,
+    romaji: String,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Deserialize, Resource)]
+struct HiraganaList {
+    hiragana: Vec<Hiragana>,
 }
 
 impl Vocabulary {
-    fn ramdom_translation(&self) -> &Translation {
+    fn ramdom_translation(&self) -> &FullWord {
         // Create a random number generator
         let mut rng = thread_rng();
 
@@ -115,11 +128,45 @@ impl Vocabulary {
             .expect("Vocabulary vec is empty")
     }
 
-    fn ramdom_translation_pair(&self) -> (&Translation, &Translation) {
+    fn ramdom_translation_pair(&self) -> (&FullWord, &FullWord) {
         let mut rng = thread_rng();
 
         // Choose two random elements from the vector
-        let chosen: Vec<&Translation> = self.translations.choose_multiple(&mut rng, 2).collect();
+        let chosen: Vec<&FullWord> = self.translations.choose_multiple(&mut rng, 2).collect();
+
+        // Unwrap the first two chosen elements or panic if not enough elements
+        match chosen.as_slice() {
+            [first, second] => (*first, *second),
+            _ => panic!("Not enough elements in translations vector"),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Word {
+    word: String,
+    translation: String,
+}
+
+#[derive(Debug, Resource)]
+struct WordList {
+    words: Vec<Word>,
+}
+
+impl WordList {
+    fn ramdom_word(&self) -> &Word {
+        // Create a random number generator
+        let mut rng = thread_rng();
+
+        // Choose a random element from the vector
+        self.words.choose(&mut rng).expect("vec is empty")
+    }
+
+    fn ramdom_word_pair(&self) -> (&Word, &Word) {
+        let mut rng = thread_rng();
+
+        // Choose two random elements from the vector
+        let chosen: Vec<&Word> = self.words.choose_multiple(&mut rng, 2).collect();
 
         // Unwrap the first two chosen elements or panic if not enough elements
         match chosen.as_slice() {
@@ -176,6 +223,17 @@ fn setup(
     vocabulary
         .translations
         .extend(extra_vocabulary.translations);
+
+    let mut new_list = WordList { words: Vec::new() };
+
+    for translation in vocabulary.translations {
+        new_list.words.push(Word {
+            word: translation.english_translation.clone(),
+            translation: translation.romaji.clone(),
+        });
+    }
+
+    let hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
 
     // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
@@ -310,7 +368,7 @@ fn setup(
 
     // spawn first sign
     for i in 0..3 {
-        let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
+        let (main_translation, off_translation) = new_list.ramdom_word_pair();
         spawn_gate(
             &mut commands,
             &mut meshes,
@@ -323,7 +381,7 @@ fn setup(
         );
     }
 
-    commands.insert_resource(vocabulary);
+    commands.insert_resource(new_list);
 }
 
 fn move_player(
@@ -362,7 +420,7 @@ fn sign_spawn_manager(
     // signs_query: Query<(Entity, &Transform, &Sign)>,
     signs_query: Query<&Sign>,
     gate_query: Query<(Entity, &Transform, &Children), With<Gate>>,
-    vocabulary: Res<Vocabulary>,
+    vocabulary: Res<WordList>,
     mut asset_server: Res<AssetServer>,
 ) {
     let distance_traveled = query.single().distance_traveled;
@@ -377,7 +435,7 @@ fn sign_spawn_manager(
                 }
             }
             commands.entity(entity).despawn_recursive();
-            let (main_translation, off_translation) = vocabulary.ramdom_translation_pair();
+            let (main_translation, off_translation) = vocabulary.ramdom_word_pair();
             let spawn_distance =
                 distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32;
             spawn_gate(
@@ -538,8 +596,8 @@ fn spawn_gate(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
-    translation: &Translation,
-    other_translation: &Translation,
+    word: &Word,
+    other_word: &Word,
     distance: f32,
     asset_server: &mut Res<AssetServer>,
 ) {
@@ -555,8 +613,8 @@ fn spawn_gate(
     };
 
     let (left_translation, right_translation) = match correct_side {
-        CorrectSide::Left => (translation, other_translation),
-        CorrectSide::Right => (other_translation, translation),
+        CorrectSide::Left => (word, other_word),
+        CorrectSide::Right => (other_word, word),
     };
 
     let gate_material_handle = materials.add(Color::srgb_u8(50, 50, 50));
@@ -569,7 +627,7 @@ fn spawn_gate(
                 ..default()
             },
             Gate {
-                translation: translation.to_owned(),
+                word: word.to_owned(),
                 gate_state: GateState::Unpass,
                 correct_side,
                 material_handle: gate_material_handle,
@@ -577,18 +635,11 @@ fn spawn_gate(
         ))
         .id();
 
-    let (left_text, right_text) = if true {
-        (
-            left_translation.romaji.as_str(),
-            right_translation.romaji.as_str(),
-        )
-    } else {
-        (
-            left_translation.japanese_word.as_str(),
-            right_translation.japanese_word.as_str(),
-        )
-    };
-    // Left sign
+    let (left_text, right_text) = (
+        left_translation.word.as_str(),
+        right_translation.translation.as_str(),
+    );
+
     let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, -SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(PI / 16.));
 
@@ -611,7 +662,7 @@ fn spawn_gate(
         commands,
         materials,
         images,
-        translation.english_translation.as_str(),
+        word.word.as_str(),
         transform,
         meshes,
         asset_server,
@@ -622,16 +673,16 @@ fn spawn_gate(
     let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
 
-    create_sign(
-        commands,
-        materials,
-        images,
-        right_text,
-        transform,
-        meshes,
-        asset_server,
-        &gate_id,
-    );
+    // create_sign(
+    //     commands,
+    //     materials,
+    //     images,
+    //     right_text,
+    //     transform,
+    //     meshes,
+    //     asset_server,
+    //     &gate_id,
+    // );
 }
 
 fn gate_pass_checker(
@@ -657,7 +708,7 @@ fn gate_pass_checker(
                     if gate.correct_side == player_side {
                         ui_interface.text_output = format!(
                             "Correct: \"{}\" => \"{}\"",
-                            gate.translation.english_translation, gate.translation.romaji
+                            gate.word.word, gate.word.translation
                         );
 
                         ui_interface.streak += 1;
@@ -668,7 +719,7 @@ fn gate_pass_checker(
                     } else {
                         ui_interface.text_output = format!(
                             "Incorrect: \"{}\" => \"{}\"",
-                            gate.translation.english_translation, gate.translation.romaji
+                            gate.word.word, gate.word.translation
                         );
 
                         ui_interface.streak = 0;
@@ -701,6 +752,14 @@ pub fn close_on_esc(
 }
 
 fn read_translation_file(file_name: &str) -> Vocabulary {
+    // Read the TOML file
+    let content = fs::read_to_string(file_name).expect("could not read translation file");
+
+    // Parse the TOML content
+    toml::from_str(&content).expect("could not parse vocab file")
+}
+
+fn read_hiragana_file(file_name: &str) -> HiraganaList {
     // Read the TOML file
     let content = fs::read_to_string(file_name).expect("could not read translation file");
 
