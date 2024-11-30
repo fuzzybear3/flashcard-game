@@ -170,14 +170,13 @@ fn main() {
         .add_systems(
             Update,
             (
-                move_player,
-                move_distance_marker,
                 sign_spawn_manager,
                 close_on_esc,
                 gate_pass_checker,
                 // resource_debug_system,
             ),
         )
+        .add_systems(FixedUpdate, (move_distance_marker, move_player))
         .run();
 }
 
