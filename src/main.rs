@@ -1,9 +1,3 @@
-use bevy::render::{
-    camera::RenderTarget,
-    // render_resource::{
-    //     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-    // },
-};
 use bevy::{color::palettes::css::*, pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy::{
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
@@ -14,6 +8,7 @@ use bevy::{
     text::FontSmoothing,
     window::PrimaryWindow,
 };
+use bevy::{pbr::NotShadowCaster, render::camera::RenderTarget};
 #[allow(unused_imports)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use std::f32::consts::PI;
@@ -226,8 +221,7 @@ fn setup(
 
     let plane_mesh = meshes.add(Plane3d::default().mesh().size(2.0, 2.0));
 
-    for x in -3..150 {
-        // for x in -3..1500 {
+    for x in -3..1500 {
         for z in -2..3 {
             commands.spawn((
                 Mesh3d(plane_mesh.clone()),
@@ -237,6 +231,7 @@ fn setup(
                     white_material.clone()
                 }),
                 Transform::from_xyz(x as f32 * 2.0, -1.0, z as f32 * 2.0),
+                NotShadowCaster,
             ));
         }
     }
@@ -266,7 +261,6 @@ fn setup(
         Transform {
             translation: Vec3::new(0.0, 5.0, 0.0),
             rotation: Quat::from_rotation_x(-PI / 2.5),
-
             ..default()
         },
         // The default cascade config is designed to handle large scenes.
@@ -285,7 +279,7 @@ fn setup(
         DirectionalLight {
             // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
             illuminance: 2_000.,
-            shadows_enabled: true,
+            shadows_enabled: false,
             ..default()
         },
         Transform {
@@ -309,7 +303,7 @@ fn setup(
         DirectionalLight {
             // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
             illuminance: 2_000.,
-            shadows_enabled: true,
+            shadows_enabled: false,
             ..default()
         },
         Transform {
