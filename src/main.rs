@@ -10,8 +10,8 @@ use bevy::{
     render::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
-        view::RenderLayers,
     },
+    text::FontSmoothing,
     window::PrimaryWindow,
 };
 #[allow(unused_imports)]
@@ -117,31 +117,6 @@ struct HiraganaList {
     hiragana: Vec<Hiragana>,
 }
 
-impl Vocabulary {
-    fn ramdom_translation(&self) -> &FullWord {
-        // Create a random number generator
-        let mut rng = thread_rng();
-
-        // Choose a random element from the vector
-        self.translations
-            .choose(&mut rng)
-            .expect("Vocabulary vec is empty")
-    }
-
-    fn ramdom_translation_pair(&self) -> (&FullWord, &FullWord) {
-        let mut rng = thread_rng();
-
-        // Choose two random elements from the vector
-        let chosen: Vec<&FullWord> = self.translations.choose_multiple(&mut rng, 2).collect();
-
-        // Unwrap the first two chosen elements or panic if not enough elements
-        match chosen.as_slice() {
-            [first, second] => (*first, *second),
-            _ => panic!("Not enough elements in translations vector"),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 struct Word {
     word: String,
@@ -154,6 +129,7 @@ struct WordList {
 }
 
 impl WordList {
+    #[allow(dead_code)]
     fn ramdom_word(&self) -> &Word {
         // Create a random number generator
         let mut rng = thread_rng();
@@ -183,13 +159,15 @@ fn main() {
         // .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(FpsOverlayPlugin {
             config: FpsOverlayConfig {
-                text_config: TextStyle {
+                enabled: true,
+                text_color: Color::srgb(0.0, 1.0, 0.0),
+                text_config: TextFont {
                     // Here we define size of our overlay
-                    font_size: 25.0,
-                    // We can also change color of the overlay
-                    color: Color::srgb(0.0, 1.0, 0.0),
+                    font_size: 42.0,
                     // If we want, we can use a custom font
                     font: default(),
+                    // We could also disable font smoothing,
+                    font_smoothing: FontSmoothing::default(),
                 },
             },
         })
@@ -248,29 +226,26 @@ fn setup(
 
     let plane_mesh = meshes.add(Plane3d::default().mesh().size(2.0, 2.0));
 
-    for x in -3..1500 {
+    for x in -3..150 {
+        // for x in -3..1500 {
         for z in -2..3 {
-            commands.spawn((PbrBundle {
-                mesh: plane_mesh.clone(),
-                material: if (x + z) % 2 == 0 {
+            commands.spawn((
+                Mesh3d(plane_mesh.clone()),
+                MeshMaterial3d(if (x + z) % 2 == 0 {
                     black_material.clone()
                 } else {
                     white_material.clone()
-                },
-                transform: Transform::from_xyz(x as f32 * 2.0, -1.0, z as f32 * 2.0),
-                ..default()
-            },));
+                }),
+                Transform::from_xyz(x as f32 * 2.0, -1.0, z as f32 * 2.0),
+            ));
         }
     }
 
     // cube
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Cuboid::new(0.8, 0.5, 0.6)),
-            material: materials.add(Color::srgb_u8(124, 144, 255)),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            ..default()
-        },
+        Mesh3d(meshes.add(Cuboid::new(0.8, 0.5, 0.6))),
+        MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
+        Transform::from_xyz(0.0, 0.0, 0.0),
         Person,
         DistanceTracker {
             distance_traveled: 0.,
@@ -282,94 +257,83 @@ fn setup(
 
     //sun
     commands.spawn((
-        DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
-                illuminance: 6_000.,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(0.0, 5.0, 0.0),
-                rotation: Quat::from_rotation_x(-PI / 2.5),
-
-                ..default()
-            },
-            // The default cascade config is designed to handle large scenes.
-            // As this example has a much smaller world, we can tighten the shadow
-            // bounds for better visual quality.
-            cascade_shadow_config: CascadeShadowConfigBuilder {
-                first_cascade_far_bound: 4.0,
-                maximum_distance: 10.0,
-                ..default()
-            }
-            .into(),
+        DirectionalLight {
+            // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
+            illuminance: 6_000.,
+            shadows_enabled: true,
             ..default()
         },
+        Transform {
+            translation: Vec3::new(0.0, 5.0, 0.0),
+            rotation: Quat::from_rotation_x(-PI / 2.5),
+
+            ..default()
+        },
+        // The default cascade config is designed to handle large scenes.
+        // As this example has a much smaller world, we can tighten the shadow
+        // bounds for better visual quality.
+        CascadeShadowConfigBuilder {
+            first_cascade_far_bound: 4.0,
+            maximum_distance: 10.0,
+            ..default()
+        }
+        .build(),
         Name::new("sun"),
     ));
+
     commands.spawn((
-        DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
-                illuminance: 2_000.,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(0.0, 5.0, 0.0),
-                rotation: Quat::from_rotation_x(PI / 4.),
-                ..default()
-            },
-            // The default cascade config is designed to handle large scenes.
-            // As this example has a much smaller world, we can tighten the shadow
-            // bounds for better visual quality.
-            cascade_shadow_config: CascadeShadowConfigBuilder {
-                first_cascade_far_bound: 4.0,
-                maximum_distance: 10.0,
-                ..default()
-            }
-            .into(),
+        DirectionalLight {
+            // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
+            illuminance: 2_000.,
+            shadows_enabled: true,
             ..default()
         },
+        Transform {
+            translation: Vec3::new(0.0, 5.0, 0.0),
+            rotation: Quat::from_rotation_x(PI / 4.),
+            ..default()
+        },
+        // The default cascade config is designed to handle large scenes.
+        // As this example has a much smaller world, we can tighten the shadow
+        // bounds for better visual quality.
+        CascadeShadowConfigBuilder {
+            first_cascade_far_bound: 4.0,
+            maximum_distance: 10.0,
+            ..default()
+        }
+        .build(),
         Name::new("fill"),
     ));
 
     commands.spawn((
-        DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
-                illuminance: 2_000.,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(0.0, 5.0, 0.0),
-                // rotation: Quat::from_rotation_z(PI / 4.),
-                rotation: Quat::from_rotation_y(5.),
-                ..default()
-            },
-            // The default cascade config is designed to handle large scenes.
-            // As this example has a much smaller world, we can tighten the shadow
-            // bounds for better visual quality.
-            cascade_shadow_config: CascadeShadowConfigBuilder {
-                first_cascade_far_bound: 4.0,
-                maximum_distance: 10.0,
-                ..default()
-            }
-            .into(),
+        DirectionalLight {
+            // illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
+            illuminance: 2_000.,
+            shadows_enabled: true,
             ..default()
         },
+        Transform {
+            translation: Vec3::new(0.0, 5.0, 0.0),
+            // rotation: Quat::from_rotation_z(PI / 4.),
+            rotation: Quat::from_rotation_y(5.),
+            ..default()
+        },
+        // The default cascade config is designed to handle large scenes.
+        // As this example has a much smaller world, we can tighten the shadow
+        // bounds for better visual quality.
+        CascadeShadowConfigBuilder {
+            first_cascade_far_bound: 4.0,
+            maximum_distance: 10.0,
+            ..default()
+        }
+        .build(),
         Name::new("forward_light"),
     ));
 
     // camera
     commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(-10., 1.5, 0.0)
-                .looking_at(Vec3::new(0., 2., 0.), Vec3::Y),
-            ..default()
-        },
+        Camera3d::default(),
+        Transform::from_xyz(-10., 1.5, 0.0).looking_at(Vec3::new(0., 2., 0.), Vec3::Y),
         Person,
     ));
 
@@ -392,7 +356,6 @@ fn setup(
 }
 
 fn move_player(
-    mut cursor_moved_events: EventReader<CursorMoved>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
     mut query: Query<&mut Transform, With<Person>>,
 ) {
@@ -509,19 +472,16 @@ fn create_sign(
 
     let image_handle = images.add(image);
 
-    // This specifies the layer used for the first pass, which will be attached to the first pass camera and cube.
-    let first_pass_layer = RenderLayers::layer(1);
-
     // Create a unique camera for rendering each texture with different text
     let texture_camera = commands
-        .spawn(Camera2dBundle {
-            camera: Camera {
+        .spawn((
+            Camera2d,
+            Camera {
                 order: -1,
                 target: RenderTarget::Image(image_handle.clone()),
                 ..default()
             },
-            ..default()
-        })
+        ))
         .id();
 
     // Set up the UI text for the texture
@@ -529,29 +489,26 @@ fn create_sign(
     let font = asset_server.load("NotoSansJP-Regular.ttf");
     let ui = commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.),
-                    height: Val::Percent(100.),
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                background_color: GOLD.into(),
+            Node {
+                width: Val::Percent(100.),
+                height: Val::Percent(100.),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
                 ..default()
             },
+            BackgroundColor(GOLD.into()),
             TargetCamera(texture_camera),
         ))
         .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                text_content,
-                TextStyle {
+            parent.spawn((
+                Text::new(text_content),
+                TextFont {
                     font,
                     font_size: 100.0,
-                    color: Color::BLACK,
                     ..default()
                 },
+                TextColor::BLACK,
             ));
         })
         .id();
@@ -567,13 +524,10 @@ fn create_sign(
     // commands.entity(parent_entity).add_child(ui);
     let sign_mesh = commands
         .spawn((
-            PbrBundle {
-                mesh: meshes.add(Cuboid::new(1.0, 4.0, 2.5)),
-                // material: materials.add(Color::srgb_u8(124, 144, 255)),
-                material: material_handle,
-                transform,
-                ..default()
-            },
+            Mesh3d(meshes.add(Cuboid::new(1.0, 4.0, 2.5))),
+            // material: materials.add(Color::srgb_u8(124, 144, 255)),
+            MeshMaterial3d(material_handle),
+            transform,
             Name::new("sign"),
         ))
         .id();
@@ -627,12 +581,9 @@ fn spawn_gate(
     let gate_material_handle = materials.add(Color::srgb_u8(50, 50, 50));
     let gate_id = commands
         .spawn((
-            PbrBundle {
-                mesh: meshes.add(Cylinder::new(0.2, 2.5)),
-                material: gate_material_handle.clone(),
-                transform: Transform::from_xyz(distance, -0.5, 0.0),
-                ..default()
-            },
+            Mesh3d(meshes.add(Cylinder::new(0.2, 2.5))),
+            MeshMaterial3d(gate_material_handle.clone()),
+            Transform::from_xyz(distance, -0.5, 0.0),
             Gate {
                 word: word.to_owned(),
                 gate_state: GateState::Unpass,

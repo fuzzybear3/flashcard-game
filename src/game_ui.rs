@@ -1,5 +1,5 @@
+use bevy::app::App;
 use bevy::prelude::*;
-use bevy::{app::App, asset::saver::AssetSaver};
 
 #[derive(Component)]
 struct TextFeedBack;
@@ -30,49 +30,42 @@ impl Plugin for GameUI {
 
 fn plugin_init(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
-        // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_section(
-            // Accepts a `String` or any type that converts into a `String`, such as `&str`
-            "hello\nplayer!",
-            TextStyle {
-                // This font is loaded and will be used instead of the default font.
-                // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                font: asset_server.load("NotoSansJP-Regular.ttf"),
-                font_size: 30.0,
-                ..default()
-            },
-        ) // Set the justification of the Text
-        .with_text_justify(JustifyText::Center)
-        // Set the style of the TextBundle itself.
-        .with_style(Style {
+        Text::new("hello\nplayer!"),
+        TextFont {
+            // This font is loaded and will be used instead of the default font.
+            // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+            font: asset_server.load("NotoSansJP-Regular.ttf"),
+            font_size: 30.0,
+            ..default()
+        },
+        // Set the justification of the Text
+        TextLayout::new_with_justify(JustifyText::Center),
+        Node {
             position_type: PositionType::Absolute,
             top: Val::Px(5.0),
             right: Val::Px(5.0),
             ..default()
-        }),
+        },
         TextFeedBack,
     ));
 
     commands.spawn((
-        // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_section(
-            // Accepts a `String` or any type that converts into a `String`, such as `&str`
-            "default string",
-            TextStyle {
-                // This font is loaded and will be used instead of the default font.
-                // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                font_size: 50.0,
-                ..default()
-            },
-        ) // Set the justification of the Text
-        .with_text_justify(JustifyText::Center)
-        // Set the style of the TextBundle itself.
-        .with_style(Style {
+        Text::new("default string"),
+        TextFont {
+            // This font is loaded and will be used instead of the default font.
+            // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+            font: asset_server.load("NotoSansJP-Regular.ttf"),
+            font_size: 50.0,
+            ..default()
+        },
+        // Set the justification of the Text
+        TextLayout::new_with_justify(JustifyText::Center),
+        Node {
             position_type: PositionType::Absolute,
             top: Val::Px(50.0),
             right: Val::Px(5.0),
             ..default()
-        }),
+        },
         StreakCounter,
     ));
 }
@@ -82,7 +75,7 @@ fn update_text_feedback(
     mut ui_query: Query<&mut Text, With<TextFeedBack>>,
 ) {
     let mut ui = ui_query.single_mut();
-    ui.sections[0].value = ui_interface.text_output.clone();
+    **ui = ui_interface.text_output.clone();
 }
 
 fn update_streak_counter(
@@ -90,5 +83,5 @@ fn update_streak_counter(
     mut ui_query: Query<&mut Text, With<StreakCounter>>,
 ) {
     let mut ui = ui_query.single_mut();
-    ui.sections[0].value = ui_interface.streak.to_string();
+    **ui = ui_interface.streak.to_string();
 }
