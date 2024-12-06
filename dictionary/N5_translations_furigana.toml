@@ -1,0 +1,377 @@
+[[translations]]
+japanese_word = "浴びる"
+furigana = "あびる"
+romaji = "abiru"
+english_translation = "to bathe, to shower"
+category = "Verb"
+
+[[translations]]
+japanese_word = "危ない"
+furigana = "あぶない"
+romaji = "abunai"
+english_translation = "dangerous"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "あっち"
+furigana = "あっち"
+romaji = "acchi"
+english_translation = "over there"
+category = "Pronoun"
+
+[[translations]]
+japanese_word = "あちら"
+furigana = "あちら"
+romaji = "achira"
+english_translation = "there"
+category = "Pronoun"
+
+[[translations]]
+japanese_word = "上げる"
+furigana = "あげる"
+romaji = "ageru"
+english_translation = "to raise; to elevate; to give"
+category = "Verb"
+
+[[translations]]
+japanese_word = "赤"
+furigana = "あか"
+romaji = "aka"
+english_translation = "red; crimson; scarlet"
+category = "Noun"
+
+[[translations]]
+japanese_word = "赤い"
+furigana = "あかい"
+romaji = "akai"
+english_translation = "red; crimson; scarlet"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "明るい"
+furigana = "あかるい"
+romaji = "akarui"
+english_translation = "bright; light"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "開ける"
+furigana = "あける"
+romaji = "akeru"
+english_translation = "to open (a door, etc.); to unwrap; to unlock"
+category = "Verb"
+
+[[translations]]
+japanese_word = "秋"
+furigana = "あき"
+romaji = "aki"
+english_translation = "autumn; fall"
+category = "Time"
+
+[[translations]]
+japanese_word = "開く"
+furigana = "あく"
+romaji = "aku"
+english_translation = "to open (e.g. doors, business, etc.)"
+category = "Verb"
+
+[[translations]]
+japanese_word = "甘い"
+furigana = "あまい"
+romaji = "amai"
+english_translation = "sweet; sugary; naive; indulgent"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "雨"
+furigana = "あめ"
+romaji = "ame"
+english_translation = "rain"
+category = "Noun"
+
+[[translations]]
+japanese_word = "飴"
+furigana = "あめ"
+romaji = "ame"
+english_translation = "candy"
+category = "Noun"
+
+[[translations]]
+japanese_word = "あなた"
+furigana = "あなた"
+romaji = "anata"
+english_translation = "you"
+category = "Pronoun"
+
+[[translations]]
+japanese_word = "姉"
+furigana = "あね"
+romaji = "ane"
+english_translation = "older sister; elder sister"
+category = "Noun"
+
+[[translations]]
+japanese_word = "兄"
+furigana = "あに"
+romaji = "ani"
+english_translation = "elder brother; older brother"
+category = "Noun"
+
+[[translations]]
+japanese_word = "あの"
+furigana = "あの"
+romaji = "ano"
+english_translation = "that"
+category = "PreNounAdjectival"
+
+[[translations]]
+japanese_word = "青"
+furigana = "あお"
+romaji = "ao"
+english_translation = "blue; azure"
+category = "Noun"
+
+[[translations]]
+japanese_word = "青い"
+furigana = "あおい"
+romaji = "aoi"
+english_translation = "blue; azure"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "アパート"
+furigana = "アパート"
+romaji = "apaato"
+english_translation = "apartment"
+category = "Noun"
+
+[[translations]]
+japanese_word = "洗う"
+furigana = "あらう"
+romaji = "arau"
+english_translation = "to wash"
+category = "Verb"
+
+[[translations]]
+japanese_word = "あれ"
+furigana = "あれ"
+romaji = "are"
+english_translation = "that"
+category = "Pronoun"
+
+[[translations]]
+japanese_word = "ある"
+furigana = "ある"
+romaji = "aru"
+english_translation = "to be, to have"
+category = "Verb"
+
+[[translations]]
+japanese_word = "歩く"
+furigana = "あるく"
+romaji = "aruku"
+english_translation = "to walk"
+category = "Verb"
+
+[[translations]]
+japanese_word = "朝"
+furigana = "あさ"
+romaji = "asa"
+english_translation = "morning"
+category = "Time"
+
+[[translations]]
+japanese_word = "朝ご飯"
+furigana = "あさごはん"
+romaji = "asagohan"
+english_translation = "breakfast"
+category = "Noun"
+
+[[translations]]
+japanese_word = "明後日"
+furigana = "あさって"
+romaji = "asatte"
+english_translation = "day after tomorrow"
+category = "Time"
+
+[[translations]]
+japanese_word = "足"
+furigana = "あし"
+romaji = "ashi"
+english_translation = "foot; leg; paw; arm"
+category = "Noun"
+
+[[translations]]
+japanese_word = "明日"
+furigana = "あした"
+romaji = "ashita"
+english_translation = "tomorrow"
+category = "Time"
+
+[[translations]]
+japanese_word = "遊ぶ"
+furigana = "あそぶ"
+romaji = "asobu"
+english_translation = "to play; to enjoy oneself"
+category = "Verb"
+
+[[translations]]
+japanese_word = "あそこ"
+furigana = "あそこ"
+romaji = "asoko"
+english_translation = "over there"
+category = "Pronoun"
+
+[[translations]]
+japanese_word = "頭"
+furigana = "あたま"
+romaji = "atama"
+english_translation = "head"
+category = "Noun"
+
+[[translations]]
+japanese_word = "新しい"
+furigana = "あたらしい"
+romaji = "atarashii"
+english_translation = "new; novel; fresh; recent"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "暖かい"
+furigana = "あたたかい"
+romaji = "atatakai"
+english_translation = "warm"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "後"
+furigana = "あと"
+romaji = "ato"
+english_translation = "behind; after; remainder; left; also"
+category = "Noun"
+
+[[translations]]
+japanese_word = "暑い"
+furigana = "あつい"
+romaji = "atsui"
+english_translation = "hot; sultry"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "厚い"
+furigana = "あつい"
+romaji = "atsui"
+english_translation = "thick"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "熱い"
+furigana = "あつい"
+romaji = "atsui"
+english_translation = "hot"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "会う"
+furigana = "あう"
+romaji = "au"
+english_translation = "to meet; to encounter; to see"
+category = "Verb"
+
+[[translations]]
+japanese_word = "晩ご飯"
+furigana = "ばんごはん"
+romaji = "bangohan"
+english_translation = "dinner; evening meal"
+category = "Noun"
+
+[[translations]]
+japanese_word = "番号"
+furigana = "ばんごう"
+romaji = "bangou"
+english_translation = "number"
+category = "Noun"
+
+[[translations]]
+japanese_word = "バス"
+furigana = "バス"
+romaji = "basu"
+english_translation = "bus"
+category = "Noun"
+
+[[translations]]
+japanese_word = "バター"
+furigana = "バター"
+romaji = "bataa"
+english_translation = "butter"
+category = "Noun"
+
+[[translations]]
+japanese_word = "ベッド"
+furigana = "ベッド"
+romaji = "beddo"
+english_translation = "bed"
+category = "Noun"
+
+[[translations]]
+japanese_word = "勉強"
+furigana = "べんきょう"
+romaji = "benkyou"
+english_translation = "to study"
+category = "SuruVerb"
+
+[[translations]]
+japanese_word = "便利"
+furigana = "べんり"
+romaji = "benri"
+english_translation = "convenient; handy; useful"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "ボールペン"
+furigana = "ボールペン"
+romaji = "boorupen"
+english_translation = "ball-point pen"
+category = "Noun"
+
+[[translations]]
+japanese_word = "ボタン"
+furigana = "ボタン"
+romaji = "botan"
+english_translation = "button"
+category = "Noun"
+
+[[translations]]
+japanese_word = "帽子"
+furigana = "ぼうし"
+romaji = "boushi"
+english_translation = "hat; cap"
+category = "Noun"
+
+[[translations]]
+japanese_word = "文章"
+furigana = "ぶんしょう"
+romaji = "bunshou"
+english_translation = "sentence"
+category = "Noun"
+
+[[translations]]
+japanese_word = "豚肉"
+furigana = "ぶたにく"
+romaji = "butaniku"
+english_translation = "pork"
+category = "Noun"
+
+[[translations]]
+japanese_word = "病院"
+furigana = "びょういん"
+romaji = "byouin"
+english_translation = "hospital"
+category = "Noun"
+
+[[translations]]
+japanese_word = "病気"
+furigana = "びょうき"
+romaji = "byouki"
+english_translation = "illness; disease; sickness"
+category = "Noun"

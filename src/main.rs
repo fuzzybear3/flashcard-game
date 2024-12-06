@@ -55,7 +55,8 @@ struct DistanceTracker {
     _distance_from_last_sign: f32,
 }
 
-const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
+const ADVANCE_AMOUNT_PER_STEP: f32 = 0.075;
+// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.15;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
@@ -89,6 +90,7 @@ enum Category {
 #[derive(Debug, Deserialize, Clone)]
 struct FullWord {
     japanese_word: String,
+    furigana: String,
     english_translation: String,
     category: Category,
     romaji: String,
@@ -188,31 +190,38 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut asset_server: Res<AssetServer>,
 ) {
-    let mut vocabulary = read_translation_file("dictionary/N5_transtlations.toml");
+    let mut vocabulary = read_translation_file("dictionary/N5_translations_furigana.toml");
     // let vocabulary = read_translation_file("N5_transtlations.toml");
 
-    let extra_vocabulary = read_translation_file("dictionary/translations.toml");
-    vocabulary
-        .translations
-        .extend(extra_vocabulary.translations);
+    // let extra_vocabulary = read_translation_file("dictionary/translations.toml");
+    // vocabulary
+    //     .translations
+    //     .extend(extra_vocabulary.translations);
 
-    let hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
+    let mut hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
+    hiragana_list
+        .hiragana
+        .extend(read_hiragana_file("dictionary/hiragana_dakuten.toml").hiragana);
+
+    hiragana_list
+        .hiragana
+        .extend(read_hiragana_file("dictionary/hiragana_handakuken.toml").hiragana);
 
     let mut new_list = WordList { words: Vec::new() };
 
-    // for translation in vocabulary.translations {
-    //     new_list.words.push(Word {
-    //         word: translation.english_translation.clone(),
-    //         translation: translation.romaji.clone(),
-    //     });
-    // }
-    //
-    for hiragana in hiragana_list.hiragana {
+    for translation in vocabulary.translations {
         new_list.words.push(Word {
-            word: hiragana.character.clone(),
-            translation: hiragana.romaji.clone(),
+            word: translation.furigana.clone(),
+            translation: translation.romaji.clone(),
         });
     }
+
+    // for hiragana in hiragana_list.hiragana {
+    //     new_list.words.push(Word {
+    //         word: hiragana.character.clone(),
+    //         translation: hiragana.romaji.clone(),
+    //     });
+    // }
 
     // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
