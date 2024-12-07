@@ -293,13 +293,6 @@ english_translation = "number"
 category = "Noun"
 
 [[translations]]
-japanese_word = "バス"
-furigana = "バス"
-romaji = "basu"
-english_translation = "bus"
-category = "Noun"
-
-[[translations]]
 japanese_word = "バター"
 furigana = "バター"
 romaji = "bataa"
@@ -326,13 +319,6 @@ furigana = "べんり"
 romaji = "benri"
 english_translation = "convenient; handy; useful"
 category = "Adjective"
-
-[[translations]]
-japanese_word = "ボールペン"
-furigana = "ボールペン"
-romaji = "boorupen"
-english_translation = "ball-point pen"
-category = "Noun"
 
 [[translations]]
 japanese_word = "ボタン"

@@ -1,0 +1,370 @@
+[[translations]]
+japanese_word = "もっと低い"
+furigana = "もっとひくい"
+romaji = "motto hikui"
+english_translation = "more lower"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "とても"
+furigana = "とても"
+romaji = "totemo"
+english_translation = "really/very"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "賢い"
+furigana = "かしこい"
+romaji = "kashikoi"
+english_translation = "clever/smart"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "速く"
+furigana = "はやく"
+romaji = "hayaku"
+english_translation = "faster/quickly"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "高い"
+furigana = "たかい"
+romaji = "takai"
+english_translation = "expensive or tall"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "難しい"
+furigana = "むずかしい"
+romaji = "muzukashii"
+english_translation = "difficult"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "楽しい"
+furigana = "たのしい"
+romaji = "tanoshii"
+english_translation = "fun"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "怖い"
+furigana = "こわい"
+romaji = "kowai"
+english_translation = "scary"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "可愛い"
+furigana = "かわいい"
+romaji = "kawaii"
+english_translation = "cute"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "悲しい"
+furigana = "かなしい"
+romaji = "kanashii"
+english_translation = "sad"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "新しい"
+furigana = "あたらしい"
+romaji = "atarashii"
+english_translation = "new"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "嬉しい"
+furigana = "うれしい"
+romaji = "ureshii"
+english_translation = "glad"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "合っている"
+furigana = "あっている"
+romaji = "atteiru"
+english_translation = "correct"
+category = "Adjective"
+
+[[translations]]
+japanese_word = "趣味"
+furigana = "しゅみ"
+romaji = "shumi"
+english_translation = "hobby"
+category = "Noun"
+
+[[translations]]
+japanese_word = "お菓子"
+furigana = "おかし"
+romaji = "okashi"
+english_translation = "sweets/snack"
+category = "Noun"
+
+[[translations]]
+japanese_word = "和風"
+furigana = "わふう"
+romaji = "wafuu"
+english_translation = "Japanese style"
+category = "Noun"
+
+[[translations]]
+japanese_word = "彼女"
+furigana = "かのじょ"
+romaji = "kanojo"
+english_translation = "girlfriend"
+category = "Noun"
+
+[[translations]]
+japanese_word = "彼氏"
+furigana = "かれし"
+romaji = "kareshi"
+english_translation = "boyfriend"
+category = "Noun"
+
+[[translations]]
+japanese_word = "子音"
+furigana = "しいん"
+romaji = "shiin"
+english_translation = "consonant"
+category = "Noun"
+
+[[translations]]
+japanese_word = "母音"
+furigana = "ぼいん"
+romaji = "boin"
+english_translation = "vowel"
+category = "Noun"
+
+[[translations]]
+japanese_word = "卓球"
+furigana = "たっきゅう"
+romaji = "takkyuu"
+english_translation = "table tennis"
+category = "Noun"
+
+[[translations]]
+japanese_word = "数学"
+furigana = "すうがく"
+romaji = "sugaku"
+english_translation = "math"
+category = "Noun"
+
+[[translations]]
+japanese_word = "中学校"
+furigana = "ちゅうがっこう"
+romaji = "chuugakkou"
+english_translation = "middle school"
+category = "Noun"
+
+[[translations]]
+japanese_word = "お祭り"
+furigana = "おまつり"
+romaji = "omatsuri"
+english_translation = "festival"
+category = "Noun"
+
+[[translations]]
+japanese_word = "飛行機"
+furigana = "ひこうき"
+romaji = "hikouki"
+english_translation = "plane"
+category = "Noun"
+
+[[translations]]
+japanese_word = "自転車"
+furigana = "じてんしゃ"
+romaji = "jitensha"
+english_translation = "bicycle"
+category = "Noun"
+
+[[translations]]
+japanese_word = "卵"
+furigana = "たまご"
+romaji = "tamago"
+english_translation = "egg"
+category = "Noun"
+
+[[translations]]
+japanese_word = "庭鳥"
+furigana = "にわとり"
+romaji = "niwa tori"
+english_translation = "chicken (alive)"
+category = "Noun"
+
+[[translations]]
+japanese_word = "君"
+furigana = "きみ"
+romaji = "kimi"
+english_translation = "you"
+category = "Noun"
+
+[[translations]]
+japanese_word = "国"
+furigana = "くに"
+romaji = "kuni"
+english_translation = "country"
+category = "Noun"
+
+[[translations]]
+japanese_word = "時間"
+furigana = "じかん"
+romaji = "jikan"
+english_translation = "hour"
+category = "Noun"
+
+[[translations]]
+japanese_word = "回転"
+furigana = "かいてん"
+romaji = "kaiten"
+english_translation = "spin"
+category = "Noun"
+
+[[translations]]
+japanese_word = "方言"
+furigana = "ほうげん"
+romaji = "hogen"
+english_translation = "dialect"
+category = "Noun"
+
+[[translations]]
+japanese_word = "言葉"
+furigana = "ことば"
+romaji = "kotoba"
+english_translation = "word"
+category = "Noun"
+
+[[translations]]
+japanese_word = "牛乳"
+furigana = "ぎゅうにゅう"
+romaji = "gyuunyuu"
+english_translation = "milk"
+category = "Noun"
+
+[[translations]]
+japanese_word = "迷子"
+furigana = "まいご"
+romaji = "maigo"
+english_translation = "lost"
+category = "Noun"
+
+[[translations]]
+japanese_word = "見る"
+furigana = "みる"
+romaji = "miru"
+english_translation = "watch"
+category = "Verb"
+
+[[translations]]
+japanese_word = "使います"
+furigana = "つかいます"
+romaji = "tsukaimasu"
+english_translation = "use"
+category = "Verb"
+
+[[translations]]
+japanese_word = "書けます"
+furigana = "かけます"
+romaji = "kakemasu"
+english_translation = "write"
+category = "Verb"
+
+[[translations]]
+japanese_word = "作る"
+furigana = "つくる"
+romaji = "tsukuru"
+english_translation = "make"
+category = "Verb"
+
+[[translations]]
+japanese_word = "訪れる"
+furigana = "おとずれる"
+romaji = "otozureru"
+english_translation = "visit"
+category = "Verb"
+
+[[translations]]
+japanese_word = "思う"
+furigana = "おもう"
+romaji = "omou"
+english_translation = "I think"
+category = "Verb"
+
+[[translations]]
+japanese_word = "始まる"
+furigana = "はじまる"
+romaji = "hajimaru"
+english_translation = "start"
+category = "Verb"
+
+[[translations]]
+japanese_word = "なるほど"
+furigana = "なるほど"
+romaji = "naruhodo"
+english_translation = "I see"
+category = "Verb"
+
+[[translations]]
+japanese_word = "地獄"
+furigana = "じごく"
+romaji = "jigoku"
+english_translation = "hell"
+category = "Noun"
+
+[[translations]]
+japanese_word = "日中"
+furigana = "にっちゅう"
+romaji = "nichibi"
+english_translation = "midday"
+category = "Time"
+
+[[translations]]
+japanese_word = "日没"
+furigana = "にちぼつ"
+romaji = "nichibotsu"
+english_translation = "sunset"
+category = "Time"
+
+[[translations]]
+japanese_word = "一秒"
+furigana = "いちびょう"
+romaji = "ichi-byo"
+english_translation = "one second"
+category = "Time"
+
+[[translations]]
+japanese_word = "時"
+furigana = "とき"
+romaji = "toki"
+english_translation = "when (facts)"
+category = "Time"
+
+[[translations]]
+japanese_word = "週末"
+furigana = "しゅうまつ"
+romaji = "shuumatsu"
+english_translation = "weekend"
+category = "Time"
+
+[[translations]]
+japanese_word = "何を"
+furigana = "なにを"
+romaji = "nani o"
+english_translation = "what"
+category = "Question"
+
+[[translations]]
+japanese_word = "いくつ"
+furigana = "いくつ"
+romaji = "ikutsu"
+english_translation = "how many"
+category = "Question"
+
+[[translations]]
+japanese_word = "なぜ"
+furigana = "なぜ"
+romaji = "naze"
+english_translation = "why"
+category = "Question"

@@ -55,8 +55,8 @@ struct DistanceTracker {
     _distance_from_last_sign: f32,
 }
 
-const ADVANCE_AMOUNT_PER_STEP: f32 = 0.075;
-// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.15;
+// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.06;
+const ADVANCE_AMOUNT_PER_STEP: f32 = 0.15;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
@@ -194,9 +194,10 @@ fn setup(
     // let vocabulary = read_translation_file("N5_transtlations.toml");
 
     // let extra_vocabulary = read_translation_file("dictionary/translations.toml");
-    // vocabulary
-    //     .translations
-    //     .extend(extra_vocabulary.translations);
+    let extra_vocabulary = read_translation_file("dictionary/translations_furigana.toml");
+    vocabulary
+        .translations
+        .extend(extra_vocabulary.translations);
 
     let mut hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
     hiragana_list
@@ -211,8 +212,8 @@ fn setup(
 
     for translation in vocabulary.translations {
         new_list.words.push(Word {
-            word: translation.furigana.clone(),
-            translation: translation.romaji.clone(),
+            word: translation.japanese_word.clone(),
+            translation: translation.english_translation.clone(),
         });
     }
 
