@@ -204,16 +204,16 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut asset_server: Res<AssetServer>,
 ) {
-    let mut vocabulary = read_full_translation_file("dictionary/jlpt_vocab.toml");
+    let mut vocabulary_full = read_full_translation_file("dictionary/jlpt_vocab.toml");
 
-    // let mut vocabulary = read_translation_file("dictionary/N5_translations_furigana.toml");
+    let mut vocabulary = read_translation_file("dictionary/N5_translations_furigana.toml");
     // let vocabulary = read_translation_file("N5_transtlations.toml");
 
     // let extra_vocabulary = read_translation_file("dictionary/translations.toml");
-    // let extra_vocabulary = read_translation_file("dictionary/translations_furigana.toml");
-    // vocabulary
-    //     .translations
-    //     .extend(extra_vocabulary.translations);
+    let extra_vocabulary = read_translation_file("dictionary/translations_furigana.toml");
+    vocabulary
+        .translations
+        .extend(extra_vocabulary.translations);
 
     let mut hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
     hiragana_list
@@ -226,26 +226,27 @@ fn setup(
 
     let mut new_list = WordList { words: Vec::new() };
 
-    for translation in vocabulary.words {
-        new_list.words.push(Word {
-            word: translation.english.clone(),
-            translation: translation.original.clone(),
-        });
-    }
+    // for translation in vocabulary_full.words {
+    //     new_list.words.push(Word {
+    //         word: translation.english.clone(),
+    //         translation: translation.original.clone(),
+    //     });
+    // }
+    //
 
     // for translation in vocabulary.translations {
     //     new_list.words.push(Word {
-    //         word: translation.japanese_word.clone(),
-    //         translation: translation.english_translation.clone(),
+    //         word: translation.furigana.clone(),
+    //         translation: translation.romaji.clone(),
     //     });
     // }
 
-    // for hiragana in hiragana_list.hiragana {
-    //     new_list.words.push(Word {
-    //         word: hiragana.character.clone(),
-    //         translation: hiragana.romaji.clone(),
-    //     });
-    // }
+    for hiragana in hiragana_list.hiragana {
+        new_list.words.push(Word {
+            word: hiragana.character.clone(),
+            translation: hiragana.romaji.clone(),
+        });
+    }
 
     // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
