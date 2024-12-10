@@ -16,6 +16,7 @@ use std::f32::consts::PI;
 use serde::Deserialize;
 use std::fs;
 
+use rand::distributions::{Distribution, WeightedIndex};
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 
@@ -118,7 +119,7 @@ struct Hiragana {
     romaji: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Word {
     word: String,
     translation: String,
@@ -151,6 +152,15 @@ impl WordList {
             [first, second] => (*first, *second),
             _ => panic!("Not enough elements in translations vector"),
         }
+    }
+
+    fn get_weighted_word_pair(&self) -> (&Word, &Word) {
+        let mut rng = thread_rng();
+        let distrabution = WeightedIndex::new(&self.weights).unwrap();
+
+        let word = &self.words[distrabution.sample(&mut rng)];
+        let word_2 = self.ramdom_word();
+        (word, word_2)
     }
 }
 
@@ -236,6 +246,7 @@ fn setup(
             word: hiragana.character.clone(),
             translation: hiragana.romaji.clone(),
         });
+        new_list.weights.push(1.);
     }
 
     // Chessboard Planetrasnlations
@@ -356,7 +367,7 @@ fn setup(
 
     // spawn first sign
     for i in 0..3 {
-        let (main_translation, off_translation) = new_list.ramdom_word_pair();
+        let (main_translation, off_translation) = new_list.get_weighted_word_pair();
         spawn_gate(
             &mut commands,
             &mut meshes,
@@ -422,7 +433,7 @@ fn sign_spawn_manager(
                 }
             }
             commands.entity(entity).despawn_recursive();
-            let (main_translation, off_translation) = vocabulary.ramdom_word_pair();
+            let (main_translation, off_translation) = vocabulary.get_weighted_word_pair();
             let spawn_distance =
                 distance_traveled + SIGN_SPACING_DISTANCE * (NUMBER_OF_SIGNS - 1) as f32;
             spawn_gate(
@@ -666,7 +677,13 @@ fn gate_pass_checker(
     player_query: Query<&Transform, With<Person>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ui_interface: ResMut<UiInterface>,
+    mut vocabulary: ResMut<WordList>,
 ) {
+    fn find_index(word: &Word, vec: &Vec<Word>) -> usize {
+        vec.iter()
+            .position(|x| x == word)
+            .expect("could not match word")
+    }
     for (transform, mut gate) in &mut query {
         match gate.gate_state {
             GateState::Passed => {}
@@ -687,6 +704,8 @@ fn gate_pass_checker(
                         );
 
                         ui_interface.streak += 1;
+                        let index = find_index(&gate.word, &vocabulary.words);
+                        vocabulary.weights[index] = (vocabulary.weights[index] * 0.5).max(1.);
 
                         if let Some(material) = materials.get_mut(&gate.material_handle) {
                             material.base_color = Color::srgb(0.2, 0.8, 0.2);
@@ -698,6 +717,8 @@ fn gate_pass_checker(
                         );
 
                         ui_interface.streak = 0;
+                        let index = find_index(&gate.word, &vocabulary.words);
+                        vocabulary.weights[index] += 50.;
 
                         if let Some(material) = materials.get_mut(&gate.material_handle) {
                             material.base_color = Color::srgb(0.8, 0.2, 0.2);
