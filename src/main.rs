@@ -56,7 +56,8 @@ struct DistanceTracker {
 }
 
 // const ADVANCE_AMOUNT_PER_STEP: f32 = 0.06;
-const ADVANCE_AMOUNT_PER_STEP: f32 = 0.15;
+// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.15;
+const ADVANCE_AMOUNT_PER_STEP: f32 = 0.2;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
@@ -106,11 +107,6 @@ struct JlptWord {
 }
 
 #[derive(Debug, Deserialize, Resource)]
-struct JlptVocabulary {
-    words: Vec<JlptWord>,
-}
-
-#[derive(Debug, Deserialize, Resource)]
 struct Vocabulary {
     translations: Vec<FullWord>,
 }
@@ -122,12 +118,6 @@ struct Hiragana {
     romaji: String,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Deserialize, Resource)]
-struct HiraganaList {
-    hiragana: Vec<Hiragana>,
-}
-
 #[derive(Debug, Clone)]
 struct Word {
     word: String,
@@ -137,6 +127,7 @@ struct Word {
 #[derive(Debug, Resource)]
 struct WordList {
     words: Vec<Word>,
+    weights: Vec<f32>,
 }
 
 impl WordList {
@@ -216,15 +207,14 @@ fn setup(
         .extend(extra_vocabulary.translations);
 
     let mut hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
-    hiragana_list
-        .hiragana
-        .extend(read_hiragana_file("dictionary/hiragana_dakuten.toml").hiragana);
+    hiragana_list.extend(read_hiragana_file("dictionary/hiragana_dakuten.toml"));
 
-    hiragana_list
-        .hiragana
-        .extend(read_hiragana_file("dictionary/hiragana_handakuken.toml").hiragana);
+    hiragana_list.extend(read_hiragana_file("dictionary/hiragana_handakuken.toml"));
 
-    let mut new_list = WordList { words: Vec::new() };
+    let mut new_list = WordList {
+        words: Vec::new(),
+        weights: Vec::new(),
+    };
 
     // for translation in vocabulary_full.words {
     //     new_list.words.push(Word {
@@ -241,7 +231,7 @@ fn setup(
     //     });
     // }
 
-    for hiragana in hiragana_list.hiragana {
+    for hiragana in hiragana_list {
         new_list.words.push(Word {
             word: hiragana.character.clone(),
             translation: hiragana.romaji.clone(),
@@ -658,16 +648,16 @@ fn spawn_gate(
     let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
 
-    create_sign(
-        commands,
-        materials,
-        images,
-        right_text,
-        transform,
-        meshes,
-        asset_server,
-        &gate_id,
-    );
+    // create_sign(
+    //     commands,
+    //     materials,
+    //     images,
+    //     right_text,
+    //     transform,
+    //     meshes,
+    //     asset_server,
+    //     &gate_id,
+    // );
 }
 
 fn gate_pass_checker(
@@ -736,12 +726,18 @@ pub fn close_on_esc(
     }
 }
 
-fn read_full_translation_file(file_name: &str) -> JlptVocabulary {
+fn read_full_translation_file(file_name: &str) -> Vec<JlptWord> {
+    #[derive(Debug, Deserialize, Resource)]
+    struct JlptTable {
+        words: Vec<JlptWord>,
+    }
+
     // Read the TOML file
     let content = fs::read_to_string(file_name).expect("could not read translation file");
 
     // Parse the TOML content
-    toml::from_str(&content).expect("could not parse vocab file")
+    let temp_table: JlptTable = toml::from_str(&content).expect("could not parse vocab file");
+    temp_table.words
 }
 
 fn read_translation_file(file_name: &str) -> Vocabulary {
@@ -752,12 +748,18 @@ fn read_translation_file(file_name: &str) -> Vocabulary {
     toml::from_str(&content).expect("could not parse vocab file")
 }
 
-fn read_hiragana_file(file_name: &str) -> HiraganaList {
+fn read_hiragana_file(file_name: &str) -> Vec<Hiragana> {
+    #[allow(dead_code)]
+    #[derive(Debug, Deserialize, Resource)]
+    struct HiraganaList {
+        hiragana: Vec<Hiragana>,
+    }
     // Read the TOML file
     let content = fs::read_to_string(file_name).expect("could not read translation file");
 
     // Parse the TOML content
-    toml::from_str(&content).expect("could not parse vocab file")
+    let temp_table: HiraganaList = toml::from_str(&content).expect("could not parse vocab file");
+    temp_table.hiragana
 }
 
 #[allow(dead_code)]
