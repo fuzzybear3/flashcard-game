@@ -57,8 +57,10 @@ struct DistanceTracker {
 }
 
 // const ADVANCE_AMOUNT_PER_STEP: f32 = 0.06;
+// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
 // const ADVANCE_AMOUNT_PER_STEP: f32 = 0.15;
-const ADVANCE_AMOUNT_PER_STEP: f32 = 0.2;
+const ADVANCE_AMOUNT_PER_STEP: f32 = 0.22;
+// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.2;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
@@ -246,8 +248,10 @@ fn setup(
             word: hiragana.character.clone(),
             translation: hiragana.romaji.clone(),
         });
-        new_list.weights.push(1.);
     }
+
+    // set all weights to 1.0
+    new_list.weights.resize(new_list.words.len(), 1.0);
 
     // Chessboard Planetrasnlations
     let black_material = materials.add(Color::BLACK);
