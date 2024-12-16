@@ -143,6 +143,7 @@ impl WordList {
         self.words.choose(&mut rng).expect("vec is empty")
     }
 
+    #[allow(dead_code)]
     fn ramdom_word_pair(&self) -> (&Word, &Word) {
         let mut rng = thread_rng();
 
@@ -207,7 +208,8 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut asset_server: Res<AssetServer>,
 ) {
-    let mut vocabulary_full = read_full_translation_file("dictionary/jlpt_vocab.toml");
+    #[allow(unused_variables)]
+    let vocabulary_full = read_full_translation_file("dictionary/jlpt_vocab.toml");
 
     let mut vocabulary = read_translation_file("dictionary/N5_translations_furigana.toml");
     // let vocabulary = read_translation_file("N5_transtlations.toml");
@@ -413,6 +415,7 @@ fn move_distance_marker(mut query: Query<&mut DistanceTracker>) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn sign_spawn_manager(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -454,6 +457,7 @@ fn sign_spawn_manager(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn create_sign(
     commands: &mut Commands,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -584,6 +588,7 @@ fn create_sign(
     sign_mesh
 }
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_gate(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -625,6 +630,7 @@ fn spawn_gate(
         ))
         .id();
 
+    #[allow(unused_variables)]
     let (left_text, right_text) = (
         left_translation.translation.as_str(),
         right_translation.translation.as_str(),
@@ -660,6 +666,7 @@ fn spawn_gate(
     );
 
     // Right sign
+    #[allow(unused_variables)]
     let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
 
@@ -683,8 +690,9 @@ fn gate_pass_checker(
     mut ui_interface: ResMut<UiInterface>,
     mut vocabulary: ResMut<WordList>,
 ) {
-    fn find_index(word: &Word, vec: &Vec<Word>) -> usize {
-        vec.iter()
+    fn find_index(word: &Word, words: &[Word]) -> usize {
+        words
+            .iter()
             .position(|x| x == word)
             .expect("could not match word")
     }
