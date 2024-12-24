@@ -59,8 +59,8 @@ struct DistanceTracker {
 // const ADVANCE_AMOUNT_PER_STEP: f32 = 0.06;
 // const ADVANCE_AMOUNT_PER_STEP: f32 = 0.1;
 // const ADVANCE_AMOUNT_PER_STEP: f32 = 0.15;
-const ADVANCE_AMOUNT_PER_STEP: f32 = 0.22;
-// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.2;
+// const ADVANCE_AMOUNT_PER_STEP: f32 = 0.22;
+const ADVANCE_AMOUNT_PER_STEP: f32 = 0.2;
 const SIGN_SPACING_DISTANCE: f32 = 25.;
 const NUMBER_OF_SIGNS: u32 = 4;
 
@@ -159,10 +159,15 @@ impl WordList {
 
     fn get_weighted_word_pair(&self) -> (&Word, &Word) {
         let mut rng = thread_rng();
-        let distrabution = WeightedIndex::new(&self.weights).unwrap();
+        let distribution = WeightedIndex::new(&self.weights).unwrap();
 
-        let word = &self.words[distrabution.sample(&mut rng)];
-        let word_2 = self.ramdom_word();
+        let word = &self.words[distribution.sample(&mut rng)];
+        let mut word_2 = self.ramdom_word();
+        // ovoid duplicate
+        while word == word_2 {
+            word_2 = self.ramdom_word();
+        }
+
         (word, word_2)
     }
 }
@@ -670,16 +675,16 @@ fn spawn_gate(
     let transform = Transform::from_xyz(sign_distance_from_gate, 1.5, SIGN_DISTANCE_FROM_CENTER)
         .with_rotation(Quat::from_rotation_x(-PI / 2.) * Quat::from_rotation_z(-PI / 16.));
 
-    // create_sign(
-    //     commands,
-    //     materials,
-    //     images,
-    //     right_text,
-    //     transform,
-    //     meshes,
-    //     asset_server,
-    //     &gate_id,
-    // );
+    create_sign(
+        commands,
+        materials,
+        images,
+        right_text,
+        transform,
+        meshes,
+        asset_server,
+        &gate_id,
+    );
 }
 
 fn gate_pass_checker(
@@ -711,7 +716,7 @@ fn gate_pass_checker(
 
                     if gate.correct_side == player_side {
                         ui_interface.text_output = format!(
-                            "Correct: \"{}\" => \"{}\"",
+                            "Yes: \"{}\" => \"{}\"",
                             gate.word.word, gate.word.translation
                         );
 
@@ -724,7 +729,7 @@ fn gate_pass_checker(
                         }
                     } else {
                         ui_interface.text_output = format!(
-                            "Incorrect: \"{}\" => \"{}\"",
+                            "No: \"{}\" => \"{}\"",
                             gate.word.word, gate.word.translation
                         );
 

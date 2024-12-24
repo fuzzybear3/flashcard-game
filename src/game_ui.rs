@@ -35,7 +35,7 @@ fn plugin_init(mut commands: Commands, asset_server: Res<AssetServer>) {
             // This font is loaded and will be used instead of the default font.
             // font: asset_server.load("fonts/FiraSans-Bold.ttf"),
             font: asset_server.load("NotoSansJP-Regular.ttf"),
-            font_size: 30.0,
+            font_size: 50.0,
             ..default()
         },
         // Set the justification of the Text
@@ -62,7 +62,7 @@ fn plugin_init(mut commands: Commands, asset_server: Res<AssetServer>) {
         TextLayout::new_with_justify(JustifyText::Center),
         Node {
             position_type: PositionType::Absolute,
-            top: Val::Px(50.0),
+            top: Val::Px(65.0),
             right: Val::Px(5.0),
             ..default()
         },
