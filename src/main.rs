@@ -228,7 +228,7 @@ fn setup(
     let mut hiragana_list = read_hiragana_file("dictionary/hiragana.toml");
     hiragana_list.extend(read_hiragana_file("dictionary/hiragana_dakuten.toml"));
 
-    hiragana_list.extend(read_hiragana_file("dictionary/hiragana_handakuken.toml"));
+    hiragana_list.extend(read_hiragana_file("dictionary/hiragana_handakuten.toml"));
 
     let mut new_list = WordList {
         words: Vec::new(),
