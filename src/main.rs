@@ -243,19 +243,19 @@ fn setup(
     // }
     //
 
-    // for translation in vocabulary.translations {
-    //     new_list.words.push(Word {
-    //         word: translation.furigana.clone(),
-    //         translation: translation.romaji.clone(),
-    //     });
-    // }
-
-    for hiragana in hiragana_list {
+    for translation in vocabulary.translations {
         new_list.words.push(Word {
-            word: hiragana.character.clone(),
-            translation: hiragana.romaji.clone(),
+            word: translation.furigana.clone(),
+            translation: translation.romaji.clone(),
         });
     }
+
+    // for hiragana in hiragana_list {
+    //     new_list.words.push(Word {
+    //         word: hiragana.character.clone(),
+    //         translation: hiragana.romaji.clone(),
+    //     });
+    // }
 
     // set all weights to 1.0
     new_list.weights.resize(new_list.words.len(), 1.0);
